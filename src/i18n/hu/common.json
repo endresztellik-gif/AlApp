@@ -1,0 +1,89 @@
+{
+    "app": {
+        "name": "AlApp",
+        "tagline": "Erdészeti nyilvántartó rendszer"
+    },
+    "nav": {
+        "dashboard": "Áttekintés",
+        "personnel": "Személyek",
+        "vehicles": "Járművek",
+        "equipment": "Eszközök",
+        "calendar": "Naptár",
+        "incidents": "Káresemények",
+        "water_facilities": "Vízi Létesítmények",
+        "settings": "Beállítások",
+        "export": "Adat Exportálás",
+        "modules": "Modulok",
+        "admin": "Adminisztráció",
+        "admin_users": "Felhasználók",
+        "admin_field_schemas": "Mezőséma",
+        "admin_feature_flags": "Modulok",
+        "logout": "Kijelentkezés"
+    },
+    "auth": {
+        "login_title": "Bejelentkezés",
+        "email": "Email cím",
+        "password": "Jelszó",
+        "login_button": "Bejelentkezés",
+        "magic_link_button": "Magic Link küldése",
+        "forgot_password": "Elfelejtett jelszó",
+        "reset_password_title": "Jelszó visszaállítása",
+        "reset_password_button": "Visszaállító link küldése",
+        "reset_password_success": "Visszaállító link elküldve!",
+        "login_error": "Hibás email cím vagy jelszó.",
+        "magic_link_success": "Magic link elküldve az email címedre!"
+    },
+    "dashboard": {
+        "title": "Áttekintés",
+        "expiring_soon": "Hamarosan lejáró",
+        "expired": "Lejárt",
+        "all_ok": "Minden rendben",
+        "days_remaining": "{{count}} nap",
+        "no_expiring": "Nincs lejáró érvényesség."
+    },
+    "common": {
+        "save": "Mentés",
+        "cancel": "Mégsem",
+        "delete": "Törlés",
+        "edit": "Szerkesztés",
+        "create": "Létrehozás",
+        "search": "Keresés...",
+        "loading": "Betöltés...",
+        "no_results": "Nincs találat.",
+        "confirm_delete": "Biztosan törölni szeretnéd?",
+        "error": "Hiba történt.",
+        "success": "Sikeresen mentve!",
+        "offline_banner": "Offline mód – az adatok a legutóbbi szinkronizálásból származnak",
+        "back": "Vissza",
+        "actions": "Műveletek",
+        "status": "Állapot",
+        "active": "Aktív",
+        "inactive": "Inaktív",
+        "name": "Név",
+        "type": "Típus",
+        "responsible": "Felelős"
+    },
+    "sidebar": {
+        "subtitle": "Dunai Osztály nyilvántartási rendszere",
+        "dev_banner": "Fejlesztés alatt"
+    },
+    "errors": {
+        "save_failed": "Hiba történt a mentés során.",
+        "upload_failed": "Hiba történt a feltöltés során.",
+        "delete_failed": "Hiba történt a törlés során.",
+        "export_failed": "Hiba történt az exportálás során.",
+        "generic": "Hiba történt."
+    },
+    "success": {
+        "upload": "Sikeres feltöltés!",
+        "delete": "Sikeresen törölve!",
+        "save": "Sikeresen mentve!"
+    },
+    "expiry": {
+        "ok": "Érvényes",
+        "warning": "Hamarosan lejár",
+        "urgent": "Sürgős",
+        "critical": "Kritikus",
+        "expired": "Lejárt"
+    }
+}

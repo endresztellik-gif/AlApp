@@ -1,0 +1,32 @@
+
+[functions.database-backup]
+enabled = true
+verify_jwt = true
+import_map = "./functions/database-backup/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/database-backup/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/database-backup/*.html" ]
+
+[functions.checklist-alert]
+enabled = true
+verify_jwt = true
+import_map = "./functions/checklist-alert/deno.json"
+entrypoint = "./functions/checklist-alert/index.ts"
+
+[functions.calendar-sync]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/calendar-sync/index.ts"
+
+[functions.check-expirations]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/check-expirations/index.ts"
+
+[functions.drive-upload]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/drive-upload/index.ts"

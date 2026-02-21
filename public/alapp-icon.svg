@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- Tree trunk -->
+  <rect x="28" y="40" width="8" height="16" rx="2" fill="#96783E"/>
+  <!-- Tree foliage layers -->
+  <path d="M32 6L48 28H16L32 6Z" fill="#5B9A68"/>
+  <path d="M32 14L50 38H14L32 14Z" fill="#3D7A4A"/>
+  <path d="M32 22L52 48H12L32 22Z" fill="#1E4D29"/>
+  <!-- Small accent leaves -->
+  <circle cx="24" cy="20" r="2" fill="#7CAE7A" opacity="0.7"/>
+  <circle cx="40" cy="24" r="1.5" fill="#A8D5AE" opacity="0.6"/>
+  <circle cx="28" cy="30" r="1.5" fill="#7CAE7A" opacity="0.5"/>
+</svg>
