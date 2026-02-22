@@ -4,6 +4,7 @@ import {
     Users, UserPlus, Shield, ShieldCheck, ShieldAlert,
     Loader2, X, Check, Ban,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useUsersAdmin } from '../hooks/useUsersAdmin';
 
 const roleLabels: Record<string, { label: string; icon: typeof Shield; color: string; bg: string }> = {
@@ -36,12 +37,29 @@ export function UsersPage() {
         e.preventDefault();
         try {
             await inviteUser({ email: inviteEmail, fullName: inviteName, role: inviteRole });
+
+            // Success toast
+            toast.success('Meghívó sikeresen elküldve!', {
+                description: `Email elküldve: ${inviteEmail}`
+            });
+
             setShowInvite(false);
             setInviteEmail('');
             setInviteName('');
             setInviteRole('user');
         } catch (err) {
             console.error('Meghívás sikertelen:', err);
+
+            // Error toast with specific message
+            const errorMessage = err instanceof Error
+                ? err.message
+                : 'Ismeretlen hiba történt';
+
+            toast.error('Meghívás sikertelen', {
+                description: errorMessage.includes('already')
+                    ? 'Ez az email cím már regisztrálva van.'
+                    : errorMessage
+            });
         }
     }, [inviteEmail, inviteName, inviteRole, inviteUser]);
 
@@ -276,6 +294,13 @@ export function UsersPage() {
                                 </div>
 
                                 <div className="flex items-center gap-2 shrink-0">
+                                    {/* Invited badge - shows if user hasn't confirmed email yet */}
+                                    {!user.email_confirmed_at && user.invited_at && (
+                                        <span className="px-2 py-1 text-[10px] font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                                            Meghívva
+                                        </span>
+                                    )}
+
                                     {editingRole === user.id ? (
                                         <motion.div
                                             initial={{ opacity: 0, scale: 0.95 }}

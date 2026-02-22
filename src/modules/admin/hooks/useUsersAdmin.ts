@@ -12,6 +12,9 @@ interface UserRow {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    // New fields from auth.users
+    email_confirmed_at?: string | null;
+    invited_at?: string | null;
 }
 
 /**
@@ -25,12 +28,27 @@ export function useUsersAdmin() {
     const query = useQuery({
         queryKey: ['admin', 'users'],
         queryFn: async (): Promise<UserRow[]> => {
-            const { data, error } = await supabase
+            // Get user_profiles
+            const { data: profiles, error: profileError } = await supabase
                 .from('user_profiles')
                 .select('*')
                 .order('full_name');
-            if (error) throw error;
-            return data;
+            if (profileError) throw profileError;
+
+            // Get auth metadata
+            const { data: { users: authUsers }, error: authError } =
+                await supabase.auth.admin.listUsers();
+            if (authError) throw authError;
+
+            // Merge data
+            return profiles.map(profile => {
+                const authUser = authUsers.find(u => u.id === profile.id);
+                return {
+                    ...profile,
+                    email_confirmed_at: authUser?.email_confirmed_at,
+                    invited_at: authUser?.invited_at,
+                };
+            });
         },
     });
 
@@ -85,7 +103,14 @@ export function useUsersAdmin() {
                 },
                 redirectTo: `${window.location.origin}/auth/setup-password`
             });
-            if (error) throw error;
+
+            if (error) {
+                // Better error messages
+                if (error.message.includes('already') || error.message.includes('User already registered')) {
+                    throw new Error('Ez az email cím már használatban van.');
+                }
+                throw new Error(error.message || 'Hiba történt a meghívás során.');
+            }
         },
         onSuccess: (_, { email, fullName, role }) => {
             queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
@@ -95,6 +120,10 @@ export function useUsersAdmin() {
                 new_values: { email, fullName, role }
             });
         },
+        onError: (error) => {
+            // Additional error logging for debugging
+            console.error('[inviteUserMutation] Error:', error);
+        }
     });
 
     return {
