@@ -92,24 +92,23 @@ export function useUsersAdmin() {
         },
     });
 
-    // Felhasználó meghívása (Supabase Auth admin API-n keresztül)
+    // Felhasználó meghívása (Edge Function-ön keresztül)
     const inviteUserMutation = useMutation({
         mutationFn: async ({ email, fullName, role }: { email: string; fullName: string; role: string }) => {
-            // Supabase Auth meghívó – a user_profiles sort a trigger hozza létre
-            const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
-                data: {
-                    full_name: fullName,
-                    role
-                },
-                redirectTo: `${window.location.origin}/auth/setup-password`
+            const { data, error } = await supabase.functions.invoke('invite-user', {
+                body: { email, fullName, role }
             });
 
             if (error) {
-                // Better error messages
-                if (error.message.includes('already') || error.message.includes('User already registered')) {
-                    throw new Error('Ez az email cím már használatban van.');
-                }
                 throw new Error(error.message || 'Hiba történt a meghívás során.');
+            }
+
+            if (data?.error) {
+                throw new Error(data.error);
+            }
+
+            if (!data?.success) {
+                throw new Error('Hiba történt a meghívás során.');
             }
         },
         onSuccess: (_, { email, fullName, role }) => {
