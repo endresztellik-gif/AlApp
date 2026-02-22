@@ -3,7 +3,7 @@
 // ============================================================
 
 // --- Felhasználói szerepkörök ---
-export type UserRole = 'user' | 'manager' | 'admin';
+export type UserRole = 'user' | 'reader' | 'admin';
 
 // --- Modul típusok ---
 export type ModuleType = 'personnel' | 'vehicles' | 'equipment';

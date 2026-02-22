@@ -8,7 +8,7 @@ import { useUsersAdmin } from '../hooks/useUsersAdmin';
 
 const roleLabels: Record<string, { label: string; icon: typeof Shield; color: string; bg: string }> = {
     admin: { label: 'Admin', icon: ShieldAlert, color: '#b83c3c', bg: 'rgba(184,60,60,0.09)' },
-    manager: { label: 'Menedzser', icon: ShieldCheck, color: '#3d7a52', bg: 'rgba(61,122,82,0.09)' },
+    reader: { label: 'Olvasó/Szerkesztő', icon: ShieldCheck, color: '#3d7a52', bg: 'rgba(61,122,82,0.09)' },
     user: { label: 'Felhasználó', icon: Shield, color: '#5a7060', bg: 'rgba(90,112,96,0.09)' },
 };
 
@@ -196,7 +196,7 @@ export function UsersPage() {
                                         style={inputStyle}
                                     >
                                         <option value="user">Felhasználó</option>
-                                        <option value="manager">Menedzser</option>
+                                        <option value="reader">Olvasó/Szerkesztő</option>
                                         <option value="admin">Admin</option>
                                     </select>
                                 </div>
@@ -282,7 +282,7 @@ export function UsersPage() {
                                             animate={{ opacity: 1, scale: 1 }}
                                             className="flex items-center gap-1"
                                         >
-                                            {(['user', 'manager', 'admin'] as const).map(r => (
+                                            {(['user', 'reader', 'admin'] as const).map(r => (
                                                 <button
                                                     key={r}
                                                     onClick={() => { updateRole({ userId: user.id, role: r }); setEditingRole(null); }}

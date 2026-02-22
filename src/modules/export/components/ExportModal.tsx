@@ -65,7 +65,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         try {
             const { data: { user: authUser } } = await supabase.auth.getUser();
             const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', authUser?.id).single();
-            const isAdminOrManager = profile?.role === 'admin' || profile?.role === 'manager';
+            const isAdminOrReader = profile?.role === 'admin' || profile?.role === 'reader';
 
             const wb = XLSX.utils.book_new();
 
@@ -80,8 +80,8 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                     `)
                     .eq('module', mod);
 
-                // If NOT admin/manager, filter by responsible_user_id
-                if (!isAdminOrManager && authUser) {
+                // If NOT admin/reader, filter by responsible_user_id
+                if (!isAdminOrReader && authUser) {
                     query = query.eq('responsible_user_id', authUser.id);
                 }
 

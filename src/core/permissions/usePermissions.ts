@@ -37,7 +37,7 @@ export interface Permissions {
 }
 
 /**
- * Jogosultságkezelő hook – a három szintű (user, manager, admin)
+ * Jogosultságkezelő hook – a három szintű (user, reader, admin)
  * jogosultsági modell alapján számítja ki az aktuális felhasználó jogait.
  */
 export function usePermissions(): Permissions {
@@ -51,19 +51,19 @@ export function usePermissions(): Permissions {
             // Adatok
             canViewOwnData: isAuthenticated,
             canEditOwnData: isAuthenticated,
-            canViewAllData: role === 'manager' || role === 'admin',
-            canEditAllData: role === 'manager' || role === 'admin',
+            canViewAllData: role === 'reader' || role === 'admin',
+            canEditAllData: role === 'admin', // Reader can edit own, DB enforces this
             canDeleteAllData: role === 'admin',
             canManageSystem: role === 'admin',
 
             // Káresemények
             canCreateIncident: isAuthenticated,
-            canViewAllIncidents: role === 'manager' || role === 'admin',
-            canManageIncidents: role === 'manager' || role === 'admin',
+            canViewAllIncidents: role === 'reader' || role === 'admin', // User only sees own
+            canManageIncidents: role === 'admin', // Only admin can update/delete
 
             // Export
             canExportOwn: isAuthenticated,
-            canExportAll: role === 'manager' || role === 'admin',
+            canExportAll: role === 'reader' || role === 'admin',
 
             // Admin
             canManageUsers: role === 'admin',
@@ -71,7 +71,7 @@ export function usePermissions(): Permissions {
             canManageFeatureFlags: role === 'admin',
 
             // Értesítések
-            canReceiveOwnNotifications: role === 'user' || role === 'manager' || role === 'admin',
+            canReceiveOwnNotifications: role === 'user' || role === 'reader' || role === 'admin',
             canReceiveAllNotifications: role === 'admin',
 
             role,
