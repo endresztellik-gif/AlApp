@@ -16,7 +16,8 @@ export function useMediaQuery(query: string): boolean {
         const mediaQuery = window.matchMedia(query)
         const handler = (event: MediaQueryListEvent) => setMatches(event.matches)
 
-        // Set initial value
+        // Set initial value when query changes
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMatches(mediaQuery.matches)
 
         mediaQuery.addEventListener('change', handler)

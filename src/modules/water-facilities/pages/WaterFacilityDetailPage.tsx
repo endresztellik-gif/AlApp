@@ -208,6 +208,7 @@ export function WaterFacilityDetailPage() {
             </div>
 
             <WaterFacilityForm
+                key={`${facility?.id}-${isEditOpen}`}
                 isOpen={isEditOpen}
                 initialData={facility}
                 onCancel={() => setIsEditOpen(false)}

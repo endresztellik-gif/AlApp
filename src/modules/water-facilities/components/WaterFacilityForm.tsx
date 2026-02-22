@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Loader2, Save } from 'lucide-react';
 import { WaterFacility, WaterFacilityInput } from '../types';
@@ -11,14 +11,19 @@ interface WaterFacilityFormProps {
     isLoading?: boolean;
 }
 
-export function WaterFacilityForm({
-    initialData,
-    onSave,
-    onCancel,
-    isOpen,
-    isLoading = false,
-}: WaterFacilityFormProps) {
-    const [formData, setFormData] = useState<WaterFacilityInput>({
+const getInitialFormData = (initialData?: WaterFacility): WaterFacilityInput => {
+    if (initialData) {
+        return {
+            name: initialData.name,
+            permit_number: initialData.permit_number || '',
+            permit_issue_date: initialData.permit_issue_date || null,
+            permit_expiry_date: initialData.permit_expiry_date || null,
+            authority: initialData.authority || '',
+            image_url: initialData.image_url || '',
+            permit_file_path: initialData.permit_file_path || '',
+        };
+    }
+    return {
         name: '',
         permit_number: '',
         permit_issue_date: null,
@@ -26,33 +31,18 @@ export function WaterFacilityForm({
         authority: '',
         image_url: '',
         permit_file_path: '',
-    });
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    };
+};
 
-    useEffect(() => {
-        if (initialData) {
-            setFormData({
-                name: initialData.name,
-                permit_number: initialData.permit_number || '',
-                permit_issue_date: initialData.permit_issue_date || null,
-                permit_expiry_date: initialData.permit_expiry_date || null,
-                authority: initialData.authority || '',
-                image_url: initialData.image_url || '',
-                permit_file_path: initialData.permit_file_path || '',
-            });
-        } else {
-            setFormData({
-                name: '',
-                permit_number: '',
-                permit_issue_date: null,
-                permit_expiry_date: null,
-                authority: '',
-                image_url: '',
-                permit_file_path: '',
-            });
-        }
-        setSelectedFile(null);
-    }, [initialData, isOpen]);
+export function WaterFacilityForm({
+    initialData,
+    onSave,
+    onCancel,
+    isOpen,
+    isLoading = false,
+}: WaterFacilityFormProps) {
+    const [formData, setFormData] = useState<WaterFacilityInput>(() => getInitialFormData(initialData));
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;

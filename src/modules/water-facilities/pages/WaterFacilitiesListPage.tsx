@@ -148,6 +148,7 @@ export function WaterFacilitiesListPage() {
             )}
 
             <WaterFacilityForm
+                key={isFormOpen ? 'open' : 'closed'}
                 isOpen={isFormOpen}
                 onCancel={() => setIsFormOpen(false)}
                 onSave={handleCreate}

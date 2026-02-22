@@ -104,23 +104,27 @@ export function DashboardPage() {
     // Bi-weekly checklist logic
     const { data: dueVehicles, refetch: refetchDue } = useDueChecklists();
     const [currentDueIndex, setCurrentDueIndex] = useState(0);
-    const [isChecklistModalOpen, setIsChecklistModalOpen] = useState(false);
+    const [manuallyDismissed, setManuallyDismissed] = useState(false);
 
+    // Derived state: modal is open when there are due vehicles and not manually dismissed
+    const hasDueVehicles = Boolean(dueVehicles && dueVehicles.length > 0);
+    const isChecklistModalOpen = hasDueVehicles && !manuallyDismissed;
+
+    // Reset state when due vehicles list changes
+    // This is intentional synchronization with query data
     useEffect(() => {
-        if (dueVehicles && dueVehicles.length > 0) {
-            setIsChecklistModalOpen(true);
-        } else {
-            setIsChecklistModalOpen(false);
-        }
-    }, [dueVehicles]);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setManuallyDismissed(false);
+        setCurrentDueIndex(0);
+    }, [dueVehicles?.length]);
 
     const handleChecklistSuccess = () => {
         if (dueVehicles && currentDueIndex < dueVehicles.length - 1) {
             // Move to next vehicle
             setCurrentDueIndex(prev => prev + 1);
         } else {
-            // Done with all
-            setIsChecklistModalOpen(false);
+            // Done with all - refetch will close modal automatically
+            setCurrentDueIndex(0);
             refetchDue();
         }
     };
@@ -471,7 +475,7 @@ export function DashboardPage() {
             {dueVehicles && dueVehicles.length > 0 && dueVehicles[currentDueIndex] && (
                 <BiWeeklyChecklistModal
                     isOpen={isChecklistModalOpen}
-                    onClose={() => setIsChecklistModalOpen(false)}
+                    onClose={() => setManuallyDismissed(true)}
                     vehicleId={dueVehicles[currentDueIndex].id}
                     vehicleName={dueVehicles[currentDueIndex].display_name}
                     onSuccess={handleChecklistSuccess}
