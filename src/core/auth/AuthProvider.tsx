@@ -14,6 +14,7 @@ export interface AuthContextType {
     signInWithMagicLink: (email: string) => Promise<void>;
     signOut: () => Promise<void>;
     resetPassword: (email: string) => Promise<void>;
+    setupPassword: (password: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -136,6 +137,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (error) throw new Error(error.message);
     }, []);
 
+    const setupPassword = useCallback(async (password: string) => {
+        // User already authenticated via invitation token
+        const { error } = await supabase.auth.updateUser({ password });
+        if (error) throw new Error(error.message);
+    }, []);
+
     return (
         <AuthContext.Provider
             value={{
@@ -148,6 +155,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 signInWithMagicLink,
                 signOut,
                 resetPassword,
+                setupPassword,
             }}
         >
             {children}

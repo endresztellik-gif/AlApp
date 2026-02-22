@@ -6,7 +6,8 @@ import {
     Car,
     Wrench,
     AlertTriangle,
-    Droplets
+    Droplets,
+    Settings
 } from 'lucide-react'
 
 const items = [
@@ -15,7 +16,7 @@ const items = [
     { to: '/vehicles', icon: Car, label: 'Járművek' },
     { to: '/equipment', icon: Wrench, label: 'Eszközök' },
     { to: '/incidents', icon: AlertTriangle, label: 'Kár' },
-    { to: '/water-facilities', icon: Droplets, label: 'Víz' },
+    { to: '/settings', icon: Settings, label: 'Beállítások' },
 ]
 
 export function BottomNav() {

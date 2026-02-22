@@ -78,10 +78,12 @@ export function useUsersAdmin() {
     const inviteUserMutation = useMutation({
         mutationFn: async ({ email, fullName, role }: { email: string; fullName: string; role: string }) => {
             // Supabase Auth meghívó – a user_profiles sort a trigger hozza létre
-            const { error } = await supabase.auth.admin.createUser({
-                email,
-                email_confirm: true,
-                user_metadata: { full_name: fullName, role },
+            const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
+                data: {
+                    full_name: fullName,
+                    role
+                },
+                redirectTo: `${window.location.origin}/auth/setup-password`
             });
             if (error) throw error;
         },

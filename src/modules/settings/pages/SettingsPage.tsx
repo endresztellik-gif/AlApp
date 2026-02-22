@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import { Users, ToggleLeft, Database, Shield, ChevronRight, Settings, Activity } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Users, ToggleLeft, Database, Shield, ChevronRight, Settings, Activity, LogOut } from 'lucide-react'
+import { useAuth } from '@/core/auth/useAuth'
 
 const settingsSections = [
     {
@@ -61,6 +62,18 @@ const settingsSections = [
 ]
 
 export function SettingsPage() {
+    const { signOut } = useAuth()
+    const navigate = useNavigate()
+
+    const handleLogout = async () => {
+        try {
+            await signOut()
+            navigate('/login')
+        } catch (error) {
+            console.error('Logout error:', error)
+        }
+    }
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 8 }}
@@ -202,6 +215,27 @@ export function SettingsPage() {
                     </motion.div>
                 ))}
             </div>
+
+            {/* Logout Section */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            >
+                <button
+                    onClick={handleLogout}
+                    className="group relative flex items-center justify-center gap-3 w-full p-4 rounded-2xl overflow-hidden transition-all hover:shadow-md"
+                    style={{
+                        background: 'linear-gradient(135deg, rgba(220,38,38,0.08) 0%, rgba(185,28,28,0.12) 100%)',
+                        border: '1px solid rgba(220,38,38,0.20)',
+                    }}
+                >
+                    <LogOut className="w-5 h-5 text-red-600" strokeWidth={2} />
+                    <span className="text-[14px] font-bold text-red-700">
+                        Kijelentkezés
+                    </span>
+                </button>
+            </motion.div>
         </motion.div>
     )
 }

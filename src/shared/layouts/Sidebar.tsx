@@ -14,7 +14,8 @@ import {
     X,
     FlaskConical,
     Download,
-    Droplets
+    Droplets,
+    LogOut
 } from 'lucide-react'
 import { useAuth } from '@/core/auth/useAuth'
 import { ExportModal } from '@/modules/export/components/ExportModal'
@@ -40,8 +41,16 @@ const bottomNavItems = [
 
 export function Sidebar({ mobile, onClose }: SidebarProps) {
     const { t } = useTranslation()
-    const { user, profile } = useAuth()
+    const { user, profile, signOut } = useAuth()
     const [isExportModalOpen, setIsExportModalOpen] = useState(false)
+
+    const handleLogout = async () => {
+        try {
+            await signOut()
+        } catch (error) {
+            console.error('Logout error:', error)
+        }
+    }
 
     // User display info
     const email = user?.email ?? 'admin@alapp.hu'
@@ -223,6 +232,17 @@ export function Sidebar({ mobile, onClose }: SidebarProps) {
                         </div>
                     </div>
                 </motion.div>
+
+                {/* Logout button */}
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-200 text-text-secondary hover:bg-red-50 hover:text-red-600 text-left mt-1"
+                >
+                    <div className="flex-shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-red-600 transition-colors">
+                        <LogOut className="w-4 h-4" />
+                    </div>
+                    <span>{t('nav.logout')}</span>
+                </button>
             </div>
 
             <AnimatePresence>

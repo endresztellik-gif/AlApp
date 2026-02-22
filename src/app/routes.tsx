@@ -16,6 +16,7 @@ import { FieldSchemasPage } from '@/modules/admin/pages/FieldSchemasPage';
 import { FeatureFlagsPage } from '@/modules/admin/pages/FeatureFlagsPage';
 import { AuditLogPage } from '@/modules/admin/pages/AuditLogPage';
 import { LoginPage } from '@/core/auth/LoginPage';
+import { SetupPasswordPage } from '@/core/auth/SetupPasswordPage';
 import { WaterFacilitiesListPage } from '@/modules/water-facilities/pages/WaterFacilitiesListPage';
 import { WaterFacilityDetailPage } from '@/modules/water-facilities/pages/WaterFacilityDetailPage';
 import { QuickReportPage } from '@/modules/vehicles/pages/QuickReportPage';
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
     {
         path: '/login',
         element: <LoginPage />,
+    },
+    {
+        path: '/auth/setup-password',
+        element: <SetupPasswordPage />,
     },
     {
         path: '/',
