@@ -6,7 +6,6 @@ import {
     Car,
     Wrench,
     AlertTriangle,
-    Droplets,
     Settings
 } from 'lucide-react'
 
