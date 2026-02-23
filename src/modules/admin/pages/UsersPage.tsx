@@ -36,32 +36,12 @@ export function UsersPage() {
     const handleInvite = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const result = await inviteUser({ email: inviteEmail, fullName: inviteName, role: inviteRole });
+            await inviteUser({ email: inviteEmail, fullName: inviteName, role: inviteRole });
 
-            // Check if we got a magic link (when SMTP is not configured)
-            if (result?.magicLink) {
-                toast.success('Felhasználó létrehozva!', {
-                    description: `Magic link generálva. Kattints ide a másoláshoz.`,
-                    action: {
-                        label: 'Link másolása',
-                        onClick: () => {
-                            navigator.clipboard.writeText(result.magicLink);
-                            toast.info('Link vágólapra másolva!', {
-                                description: 'Most küldd el ezt a linket a felhasználónak emailben.'
-                            });
-                        }
-                    },
-                    duration: 10000 // 10 seconds
-                });
-
-                // Also log it to console for easy access
-                console.log('🔗 Magic Link:', result.magicLink);
-            } else {
-                // Success toast (normal email sent)
-                toast.success('Meghívó sikeresen elküldve!', {
-                    description: `Email elküldve: ${inviteEmail}`
-                });
-            }
+            // Success toast
+            toast.success('Meghívó sikeresen elküldve!', {
+                description: `Email elküldve: ${inviteEmail}`
+            });
 
             setShowInvite(false);
             setInviteEmail('');

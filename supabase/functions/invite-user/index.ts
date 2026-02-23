@@ -79,96 +79,33 @@ serve(async (req) => {
       }
     )
 
-    // Check if user already exists
-    const { data: { users: existingUsers } } = await supabaseAdmin.auth.admin.listUsers()
-    const userExists = existingUsers.some(u => u.email === email)
+    // Invite user using admin client
+    const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      data: {
+        full_name: fullName,
+        role
+      },
+      redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/auth/setup-password`
+    })
 
-    if (userExists) {
+    if (error) {
+      console.error('Invite error:', error)
+      // Check for duplicate email
+      if (error.message.includes('already') || error.message.includes('User already registered')) {
+        return new Response(
+          JSON.stringify({ error: 'Ez az email cím már használatban van.' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
+      }
       return new Response(
-        JSON.stringify({ error: 'Ez az email cím már használatban van.' }),
+        JSON.stringify({ error: error.message || 'Hiba történt a meghívás során.' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       )
     }
 
-    // Create user without sending email (since SMTP is not configured)
-    const { data: newUserData, error: createError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
-      email_confirm: false, // Don't send confirmation email
-      user_metadata: {
-        full_name: fullName,
-        role: role
-      }
-    })
-
-    if (createError) {
-      console.error('Create user error:', createError)
-      return new Response(
-        JSON.stringify({
-          error: createError.message || 'Hiba történt a felhasználó létrehozása során.',
-          details: createError.message
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      )
-    }
-
-    if (!newUserData.user) {
-      return new Response(
-        JSON.stringify({ error: 'Nem sikerült létrehozni a felhasználót.' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-
-    // Create user profile in user_profiles table
-    const { error: profileInsertError } = await supabaseAdmin
-      .from('user_profiles')
-      .insert({
-        id: newUserData.user.id,
-        email: email,
-        full_name: fullName,
-        role: role,
-        is_active: true
-      })
-
-    if (profileInsertError) {
-      console.error('Profile insert error:', profileInsertError)
-      // Try to delete the auth user if profile creation failed
-      await supabaseAdmin.auth.admin.deleteUser(newUserData.user.id)
-
-      return new Response(
-        JSON.stringify({
-          error: 'Hiba történt a felhasználói profil létrehozása során.',
-          details: profileInsertError.message
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      )
-    }
-
-    // Generate password reset link (this works without SMTP configured)
-    const { data: resetData, error: resetError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'magiclink',
-      email: email,
-      options: {
-        redirectTo: `${Deno.env.get('SITE_URL') || Deno.env.get('VITE_APP_URL') || 'http://localhost:5173'}/auth/setup-password`
-      }
-    })
-
-    if (resetError) {
-      console.error('Generate link error:', resetError)
-      // User is created, but we couldn't generate the magic link
-      // Still return success, admin can manually send invite later
-    }
-
-    console.log('User created successfully:', email)
-
+    console.log('User invited successfully:', email)
     return new Response(
-      JSON.stringify({
-        success: true,
-        user: newUserData.user,
-        magicLink: resetData?.properties?.action_link || null,
-        message: resetData?.properties?.action_link
-          ? 'Felhasználó létrehozva. Küld el neki ezt a linket: ' + resetData.properties.action_link
-          : 'Felhasználó létrehozva, de az email küldés jelenleg nem elérhető. Kérlek állítsd be az SMTP-t a Supabase Dashboard-on.'
-      }),
+      JSON.stringify({ success: true, user: data.user }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
