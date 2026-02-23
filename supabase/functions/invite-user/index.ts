@@ -13,27 +13,26 @@ serve(async (req) => {
   }
 
   try {
-    // Get the authorization header from the request
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      throw new Error('Missing authorization header')
-    }
-
-    // Create a Supabase client with the user's auth token
+    // Create a Supabase client with the Auth context of the logged in user
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: authHeader },
+          headers: { Authorization: req.headers.get('Authorization')! },
         },
       }
     )
 
-    // Verify the user is authenticated and is an admin
+    // Get the user from the access token JWT
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser()
+
     if (userError || !user) {
-      throw new Error('Unauthorized')
+      console.error('Auth error:', userError)
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized', details: userError?.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 401 }
+      )
     }
 
     // Check if user is admin
@@ -43,15 +42,29 @@ serve(async (req) => {
       .eq('id', user.id)
       .single()
 
-    if (profileError || profile?.role !== 'admin') {
-      throw new Error('Only admins can invite users')
+    if (profileError) {
+      console.error('Profile error:', profileError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch user profile', details: profileError.message }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      )
+    }
+
+    if (profile?.role !== 'admin') {
+      return new Response(
+        JSON.stringify({ error: 'Only admins can invite users' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      )
     }
 
     // Get request body
     const { email, fullName, role } = await req.json()
 
     if (!email || !fullName || !role) {
-      throw new Error('Missing required fields: email, fullName, role')
+      return new Response(
+        JSON.stringify({ error: 'Missing required fields: email, fullName, role' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
 
     // Create admin client with service role key
@@ -76,30 +89,30 @@ serve(async (req) => {
     })
 
     if (error) {
+      console.error('Invite error:', error)
       // Check for duplicate email
       if (error.message.includes('already') || error.message.includes('User already registered')) {
-        throw new Error('Ez az email cím már használatban van.')
+        return new Response(
+          JSON.stringify({ error: 'Ez az email cím már használatban van.' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        )
       }
-      throw error
+      return new Response(
+        JSON.stringify({ error: error.message || 'Hiba történt a meghívás során.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
 
+    console.log('User invited successfully:', email)
     return new Response(
       JSON.stringify({ success: true, user: data.user }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200,
-      },
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     )
   } catch (error) {
+    console.error('Unexpected error:', error)
     return new Response(
-      JSON.stringify({
-        error: error.message || 'An error occurred',
-        success: false
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
-      },
+      JSON.stringify({ error: error.message || 'An unexpected error occurred' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     )
   }
 })
