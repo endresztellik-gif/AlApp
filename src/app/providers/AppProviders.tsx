@@ -4,6 +4,8 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from '@/core/auth/AuthProvider';
 import { FeatureFlagProvider } from '@/core/feature-flags/FeatureFlagProvider';
 import { OfflineSyncProvider } from '@/core/offline/OfflineSyncProvider';
+import { InstallPrompt } from '@/core/pwa/InstallPrompt';
+import { PWAUpdateNotification } from '@/core/pwa/PWAUpdateNotification';
 
 // TanStack Query kliens – cache és retry beállítások
 const queryClient = new QueryClient({
@@ -32,6 +34,8 @@ export function AppProviders({ children }: AppProvidersProps) {
                     <FeatureFlagProvider>
                         {children}
                         <Toaster position="top-right" richColors closeButton />
+                        <InstallPrompt />
+                        <PWAUpdateNotification />
                     </FeatureFlagProvider>
                 </OfflineSyncProvider>
             </AuthProvider>
