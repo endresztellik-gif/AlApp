@@ -142,25 +142,37 @@ npx supabase functions deploy invite-user --no-verify-jwt
 
 ---
 
-### Jelenlegi Hiba (Utolsó Státusz)
+### ⚠️ VISSZAÁLLÍTÁS (2026-02-23 10:15)
 
-**HTTP Status:** 400 Bad Request
-**Hibaüzenet:** `{"error":"Error sending invite email"}`
+**Commits:**
+- `eadb4ec` - Revert "Fix user invitation by creating user directly without SMTP"
+- `9a6fe9c` - Revert "Update implementation log - user invitation feature complete"
 
-**Mit jelent:**
-- ✅ Edge Function elérhető (nem 401-et kapunk)
-- ✅ Authentication működik (nem 403-at kapunk)
-- ❌ Valami hiba van az `inviteUserByEmail` hívás során
+**Visszaállított commitok:**
+- `da6b3cf` - Update implementation log
+- `f006aee` - Fix user invitation by creating user directly without SMTP
 
-**Következő lépések:**
-1. Ellenőrizni a Supabase Dashboard Edge Function logs-ot:
-   ```
-   https://supabase.com/dashboard/project/mgducjqbzqcmrzcsklmn/functions/invite-user/logs
-   ```
+**Ok:** A `createUser` megközelítés **HELYTELEN** volt. Az eredeti terv a `inviteUserByEmail` használata volt Gmail SMTP-vel, amit meg kell tartani.
 
-2. Tesztelni az alkalmazásban és nézni a pontos hibaüzenetet
+### Jelenlegi Státusz (Utolsó Frissítés)
 
-3. Ellenőrizni, hogy a `SUPABASE_SERVICE_ROLE_KEY` secret megfelelően van-e beállítva
+**Státusz:** ⚠️ **SMTP beállítás szükséges a Supabase Dashboard-on**
+
+**Mi van készen:**
+- ✅ Edge Function (`inviteUserByEmail` verzió) - deployed
+- ✅ Frontend (egyszerű toast notification-ökkel)
+- ✅ "Meghívva" badge a user listában
+- ✅ Git history tiszta (revert-ek pushed)
+
+**Mi hiányzik:**
+- ❌ Gmail SMTP beállítás a Supabase Dashboard-on
+
+**Következő lépés:**
+1. **Állítsd be a Gmail SMTP-t a Supabase Dashboard-on** a `GMAIL_SMTP_SETUP.md` dokumentáció alapján
+2. Teszteld a user invitation funkciót
+3. Ellenőrizd hogy az email megérkezik-e
+
+**Dokumentáció:** Lásd `GMAIL_SMTP_SETUP.md` a részletes SMTP beállítási útmutatóhoz
 
 ---
 
@@ -235,11 +247,24 @@ curl -i "https://mgducjqbzqcmrzcsklmn.supabase.co/functions/v1/invite-user" \
 
 ## 📊 Git Commits
 
+**Legutóbbi commits (jelenlegi verzió):**
 ```
-4ab8463 - Improve user invitation UX with toast notifications and invited badge
-7df3116 - Fix user invitation by switching to Edge Function approach
-97bb045 - Improve Edge Function error handling and auth flow
+eadb4ec - Revert "Fix user invitation by creating user directly without SMTP"
+9a6fe9c - Revert "Update implementation log - user invitation feature complete"
+```
+
+**Visszavont commits (helytelen megközelítés):**
+```
+da6b3cf - Update implementation log - user invitation feature complete (REVERT-elve)
+f006aee - Fix user invitation by creating user directly without SMTP (REVERT-elve)
+```
+
+**Érvényes commits (eredeti megközelítés):**
+```
+527c72b - Add implementation log for user invitation feature
 3c8f660 - Deploy Edge Function with no-verify-jwt flag to fix authentication
+97bb045 - Improve Edge Function error handling and auth flow
+4ab8463 - Improve user invitation UX with toast notifications and invited badge
 ```
 
 **Branch:** `main`
@@ -249,35 +274,31 @@ curl -i "https://mgducjqbzqcmrzcsklmn.supabase.co/functions/v1/invite-user" \
 
 ## 🚀 Következő Lépések (TODO)
 
-### 1. Debug Edge Function Hiba
-- [ ] Nézd meg a Supabase Dashboard logs-ot
-- [ ] Ellenőrizd a pontos hibaüzenetet
-- [ ] Verify `SUPABASE_SERVICE_ROLE_KEY` működik-e
+### 1. Gmail SMTP Beállítás (KRITIKUS!)
+- [ ] Nyisd meg a Supabase Dashboard: https://supabase.com/dashboard/project/mgducjqbzqcmrzcsklmn/auth/email-templates
+- [ ] Navigálj: Authentication → Email → SMTP Settings
+- [ ] Állítsd be a Gmail SMTP-t (lásd `GMAIL_SMTP_SETUP.md`)
+  - Enable Custom SMTP: ✅
+  - SMTP Host: smtp.gmail.com
+  - SMTP Port: 587
+  - SMTP User: dunaddnpi@gmail.com
+  - SMTP Password: buwilryyaxrwjieu
+  - Sender Email: dunaddnpi@gmail.com
+  - Sender Name: Dunai Osztály AlApp
+- [ ] Save
 
-### 2. Alternatív Megoldások (ha Edge Function nem működik)
-
-#### Opció A: RPC Function (Database Function)
-```sql
-CREATE FUNCTION invite_user_rpc(...)
-RETURNS JSON
-SECURITY DEFINER
+### 2. Edge Function Újra-Deploy
+```bash
+SUPABASE_ACCESS_TOKEN=sbp_f0bfa57b8365a3dff0b8dbe54bd06e82d6f88bf2 \
+  npx supabase functions deploy invite-user --no-verify-jwt
 ```
-- Előny: Biztonságos, RLS-sel működik
-- Hátrány: Nem tud direkt Auth API-t hívni
-
-#### Opció B: Supabase Dashboard Manual Invite
-- Ideiglenes megoldás: Admin manuálisan hívja meg a dashboard-ról
-- Csak fejlesztés közben
-
-#### Opció C: Webhook / External Service
-- Külső service (pl. Netlify Function) hívja a Supabase Auth API-t
-- Komplexebb, de rugalmasabb
 
 ### 3. Tesztelés
 - [ ] Sikeres meghívás tesztelése
 - [ ] Duplikált email teszt
 - [ ] "Meghívva" badge megjelenés teszt
-- [ ] Email fogadás teszt
+- [ ] Email fogadás teszt (spam mappát is nézd!)
+- [ ] Setup password oldal működés teszt
 
 ---
 
@@ -369,6 +390,6 @@ git push
 
 ---
 
-**Utolsó frissítés:** 2026-02-23 07:15 (Europe/Budapest)
-**Státusz:** Edge Function deployed, JWT hiba megoldva, invite email hiba debug alatt
-**Következő:** Nézd meg a Dashboard logs-ot és teszteld az alkalmazásban!
+**Utolsó frissítés:** 2026-02-23 10:15 (Europe/Budapest)
+**Státusz:** Visszaállítva az eredeti `inviteUserByEmail` megközelítésre, SMTP beállítás szükséges
+**Következő:** Állítsd be a Gmail SMTP-t a Dashboard-on (lásd `GMAIL_SMTP_SETUP.md`)!
