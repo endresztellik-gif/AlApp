@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { validatePassword } from '@/shared/utils/passwordValidation';
-import { TreePine, Lock, Eye, EyeOff, CheckCircle2, XCircle, ArrowRight, Loader2, Leaf, Shield } from 'lucide-react';
+import { Lock, Eye, EyeOff, CheckCircle2, XCircle, ArrowRight, Loader2, Leaf, Shield } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 /**
@@ -143,12 +143,16 @@ export const SetupPasswordPage = () => {
                     {/* Logo */}
                     <div className="mb-8 flex flex-col items-center gap-3">
                         <motion.div
-                            whileHover={{ rotate: [0, -6, 5, 0], scale: 1.05 }}
-                            transition={{ duration: 0.5 }}
-                            className="rounded-[18px] gradient-primary p-4 shadow-lg"
-                            style={{ boxShadow: '0 8px 24px -6px rgba(35,86,52,0.45)' }}
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ duration: 0.3 }}
+                            className="rounded-[22px] shadow-lg overflow-hidden"
+                            style={{ boxShadow: '0 8px 24px -6px rgba(35,86,52,0.35)' }}
                         >
-                            <TreePine className="h-9 w-9 text-white" strokeWidth={1.8} />
+                            <img
+                                src="/alapp-main-logo.png"
+                                alt="AlApp Logo"
+                                className="h-20 w-20 object-contain"
+                            />
                         </motion.div>
                         <div className="text-center">
                             <h1 className="text-[26px] font-bold tracking-tight text-gradient leading-none mb-1.5">

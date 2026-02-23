@@ -10,7 +10,6 @@ import {
     CalendarDays,
     AlertTriangle,
     Settings,
-    TreePine,
     X,
     FlaskConical,
     Download,
@@ -69,12 +68,16 @@ export function Sidebar({ mobile, onClose }: SidebarProps) {
             <div className="flex items-center justify-between px-5 pt-6 pb-5">
                 <div className="flex items-center gap-3">
                     <motion.div
-                        whileHover={{ rotate: [0, -8, 6, 0], scale: 1.05 }}
-                        transition={{ duration: 0.5, type: 'tween' }}
-                        className="w-10 h-10 rounded-[14px] gradient-primary flex items-center justify-center shadow-md flex-shrink-0"
-                        style={{ boxShadow: '0 4px 14px -3px rgba(35,86,52,0.40)' }}
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ duration: 0.3, type: 'spring' }}
+                        className="w-10 h-10 rounded-[14px] shadow-md flex items-center justify-center flex-shrink-0 bg-white/90"
+                        style={{ boxShadow: '0 4px 14px -3px rgba(35,86,52,0.25)' }}
                     >
-                        <TreePine className="w-5 h-5 text-white" strokeWidth={2} />
+                        <img
+                            src="/alapp-main-logo.png"
+                            alt="AlApp"
+                            className="w-10 h-10 object-contain"
+                        />
                     </motion.div>
                     <div>
                         <h1 className="text-[18px] font-bold tracking-tight text-gradient leading-none mb-0.5">
