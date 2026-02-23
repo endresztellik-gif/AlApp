@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/core/auth/useAuth';
 import { validatePassword } from '@/shared/utils/passwordValidation';
 import { TreePine, Lock, Eye, EyeOff, CheckCircle2, XCircle, ArrowRight, Loader2, Leaf, Shield } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 /**
  * Jelszó beállító oldal – meghívott felhasználók első belépésekor.
@@ -32,7 +33,12 @@ export const SetupPasswordPage = () => {
             setIsLoading(true);
             setError(null);
             try {
-                await setupPassword(password);
+                // Update password AND set password_set flag
+                await supabase.auth.updateUser({
+                    password,
+                    data: { password_set: true }  // Mark password as set
+                });
+
                 // Clear the hash from URL to prevent re-triggering invite flow
                 window.location.hash = '';
                 navigate('/', { replace: true });
@@ -43,7 +49,7 @@ export const SetupPasswordPage = () => {
                 setIsLoading(false);
             }
         },
-        [password, canSubmit, setupPassword, navigate]
+        [password, canSubmit, navigate]
     );
 
     useEffect(() => {

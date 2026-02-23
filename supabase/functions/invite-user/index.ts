@@ -83,7 +83,8 @@ serve(async (req) => {
     const { data, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       data: {
         full_name: fullName,
-        role
+        role,
+        password_set: false  // Flag to track if user has set their password
       },
       redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:5173'}/auth/setup-password`
     })

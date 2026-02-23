@@ -1,7 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './useAuth';
 import { Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -10,21 +9,6 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
     const { isAuthenticated, isLoading, user } = useAuth();
     const location = useLocation();
-    const [needsPasswordSetup, setNeedsPasswordSetup] = useState(false);
-
-    // Check if user is invited and needs to set password
-    useEffect(() => {
-        if (user) {
-            // Check URL hash for invitation token
-            const hash = window.location.hash;
-            const isInviteFlow = hash.includes('type=invite');
-
-            // If user came from invitation link, redirect to password setup
-            if (isInviteFlow) {
-                setNeedsPasswordSetup(true);
-            }
-        }
-    }, [user]);
 
     if (isLoading) {
         return (
@@ -38,6 +22,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         // Redirect to login page, but save the intended location
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
+
+    // Check if user is invited and hasn't set password yet
+    const needsPasswordSetup = user?.user_metadata?.password_set === false;
 
     // If user needs to set password (from invitation), redirect to setup page
     if (needsPasswordSetup && location.pathname !== '/auth/setup-password') {
