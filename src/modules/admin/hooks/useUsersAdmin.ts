@@ -110,6 +110,8 @@ export function useUsersAdmin() {
             if (!data?.success) {
                 throw new Error('Hiba történt a meghívás során.');
             }
+
+            return data; // Return data so we can access magicLink
         },
         onSuccess: (_, { email, fullName, role }) => {
             queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
