@@ -10,7 +10,6 @@ import { supabase } from '@/lib/supabase';
  * Jelszó beállító oldal – meghívott felhasználók első belépésekor.
  */
 export const SetupPasswordPage = () => {
-    const { setupPassword } = useAuth();
     const navigate = useNavigate();
 
     const [password, setPassword] = useState('');
