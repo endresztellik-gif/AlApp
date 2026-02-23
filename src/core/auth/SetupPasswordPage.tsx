@@ -33,7 +33,9 @@ export const SetupPasswordPage = () => {
             setError(null);
             try {
                 await setupPassword(password);
-                navigate('/dashboard', { replace: true });
+                // Clear the hash from URL to prevent re-triggering invite flow
+                window.location.hash = '';
+                navigate('/', { replace: true });
             } catch (err: unknown) {
                 console.error('[SetupPasswordPage] Password setup error:', err);
                 setError(err instanceof Error ? err.message : 'Hiba történt a jelszó beállítása során');
