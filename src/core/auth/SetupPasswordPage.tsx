@@ -31,11 +31,35 @@ export const SetupPasswordPage = () => {
             setIsLoading(true);
             setError(null);
             try {
-                // Update password AND set password_set flag
-                await supabase.auth.updateUser({
+                // 1. Update password AND set password_set flag
+                const { data: userData, error: updateError } = await supabase.auth.updateUser({
                     password,
                     data: { password_set: true }  // Mark password as set
                 });
+
+                if (updateError) throw updateError;
+
+                // 2. CRITICAL FIX: Ensure user_profiles has full_name from metadata
+                // This fixes the issue where invited users don't show full_name in admin list
+                if (userData.user) {
+                    const fullName = userData.user.user_metadata?.full_name;
+                    const role = userData.user.user_metadata?.role;
+
+                    if (fullName || role) {
+                        const { error: profileError } = await supabase
+                            .from('user_profiles')
+                            .update({
+                                ...(fullName && { full_name: fullName }),
+                                ...(role && { role: role })
+                            })
+                            .eq('id', userData.user.id);
+
+                        if (profileError) {
+                            console.warn('[SetupPasswordPage] Failed to update user_profiles:', profileError);
+                            // Don't throw - password was set successfully, this is just metadata sync
+                        }
+                    }
+                }
 
                 // Clear the hash from URL to prevent re-triggering invite flow
                 window.location.hash = '';

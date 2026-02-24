@@ -281,15 +281,22 @@ export function UsersPage() {
                                     <div
                                         className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold text-white shrink-0"
                                         style={{
-                                            background: avatarGradient(user.full_name),
+                                            background: avatarGradient(user.full_name || user.email),
                                             boxShadow: '0 2px 6px -2px rgba(0,0,0,0.2)',
                                         }}
                                     >
-                                        {user.full_name.charAt(0).toUpperCase()}
+                                        {(user.full_name || user.email).charAt(0).toUpperCase()}
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-[13px] font-semibold text-text-primary truncate leading-tight">{user.full_name}</p>
-                                        <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                                        <p className="text-[13px] font-semibold text-text-primary truncate leading-tight">
+                                            {user.full_name || user.email.split('@')[0] || 'Névtelen'}
+                                        </p>
+                                        {!user.full_name && (
+                                            <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                                        )}
+                                        {user.full_name && (
+                                            <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                                        )}
                                     </div>
                                 </div>
 

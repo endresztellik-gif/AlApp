@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { X, Loader2, Save } from 'lucide-react';
 import { useEntityTypesAdmin, useFieldSchemasAdmin } from '@/modules/admin/hooks/useFieldSchemasAdmin';
-import { useUsersAdmin } from '@/modules/admin/hooks/useUsersAdmin';
 import { DynamicFieldInput } from '@/shared/components/DynamicFieldInput';
 import { Personnel } from '../hooks/usePersonnel';
 
@@ -31,7 +30,6 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
 
     const [selectedTypeId, setSelectedTypeId] = useState<string | null>(initialData?.entity_type_id || defaultTypeId);
     const { fields: fieldSchemas, isLoading: schemasLoading } = useFieldSchemasAdmin(selectedTypeId);
-    const { users } = useUsersAdmin();
 
     const [formData, setFormData] = useState({
         display_name: '',
@@ -124,20 +122,6 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                                     placeholder="Teljes név"
                                 />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-medium text-muted-foreground mb-1 block">Felelős felhasználó</label>
-                                <select
-                                    value={formData.responsible_user_id}
-                                    onChange={(e) => setFormData(p => ({ ...p, responsible_user_id: e.target.value }))}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                                >
-                                    <option value="">- Nincs kiválasztva -</option>
-                                    {users.map(u => (
-                                        <option key={u.id} value={u.id}>{u.full_name}</option>
-                                    ))}
-                                </select>
                             </div>
 
                             <div className="flex items-center pt-6">

@@ -53,9 +53,9 @@
   --color-text-secondary: #4A5E4F;
   --color-text-muted:     #849088;
 
-  /* Háttér színek – meleg pergamen */
-  --color-bg-primary:   #F4EFE5;
-  --color-bg-secondary: #EAE3D6;
+  /* Háttér színek – meleg pergamen (sötétebb primary = jobb dialog kontraszt) */
+  --color-bg-primary:   #EBE8DC;
+  --color-bg-secondary: #DCD9CD;
   --color-bg-card:      #FDFAF5;
 
   /* Border radius */
@@ -484,4 +484,27 @@ input:focus, textarea:focus, select:focus {
   opacity: 0.055;
   pointer-events: none;
   user-select: none;
+}
+
+/* ============================================================
+   React Day Picker Custom Styling
+   ============================================================ */
+.rdp-custom {
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.rdp-custom .rdp-day_selected {
+  background-color: var(--color-primary-500);
+  color: white;
+  font-weight: 600;
+}
+
+.rdp-custom .rdp-day:hover:not(.rdp-day_selected) {
+  background-color: var(--color-primary-100);
+}
+
+.rdp-custom .rdp-button:focus-visible {
+  outline: 2px solid var(--color-primary-400);
+  outline-offset: 2px;
 }

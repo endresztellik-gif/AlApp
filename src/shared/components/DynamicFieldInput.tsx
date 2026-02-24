@@ -1,4 +1,5 @@
-import { Calendar, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { DatePickerField } from './DatePickerField';
 
 interface DynamicFieldInputProps {
     schema: {
@@ -47,16 +48,11 @@ export function DynamicFieldInput({ schema, value, onChange, error }: DynamicFie
             case 'date':
             case 'date_expiry':
                 return (
-                    <div className="relative">
-                        <input
-                            type="date"
-                            value={value || ''}
-                            onChange={(e) => onChange(e.target.value)}
-                            className={`${baseInputClasses} pl-10`} // padding left for icon
-                            required={schema.is_required}
-                        />
-                        <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    </div>
+                    <DatePickerField
+                        value={value?.toString() || ''}
+                        onChange={onChange}
+                        required={schema.is_required}
+                    />
                 );
 
             case 'select': {

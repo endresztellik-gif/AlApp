@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlApp - Felhasználói Útmutató</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 210mm;
+            margin: 0 auto;
+            padding: 20px;
+            background: #fff;
+        }
+
+        h1 {
+            color: #2c5f2d;
+            font-size: 32px;
+            margin-bottom: 10px;
+            border-bottom: 3px solid #2c5f2d;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #2c5f2d;
+            font-size: 24px;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            page-break-after: avoid;
+        }
+
+        h3 {
+            color: #3a7c4c;
+            font-size: 18px;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            page-break-after: avoid;
+        }
+
+        h4 {
+            color: #4a8f5d;
+            font-size: 16px;
+            margin-top: 15px;
+            margin-bottom: 8px;
+            page-break-after: avoid;
+        }
+
+        p {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        ul, ol {
+            margin-left: 25px;
+            margin-bottom: 12px;
+        }
+
+        li {
+            margin-bottom: 6px;
+        }
+
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            border-left: 3px solid #2c5f2d;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .header-info {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .toc {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+
+        .toc h2 {
+            margin-top: 0;
+        }
+
+        .toc ul {
+            list-style-type: none;
+            margin-left: 0;
+        }
+
+        .toc li {
+            margin-bottom: 5px;
+        }
+
+        .toc a {
+            color: #2c5f2d;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        strong {
+            color: #2c5f2d;
+            font-weight: 600;
+        }
+
+        .important {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 15px 0;
+        }
+
+        .success {
+            background-color: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 12px;
+            margin: 15px 0;
+        }
+
+        .info {
+            background-color: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            padding: 12px;
+            margin: 15px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #2c5f2d;
+            color: white;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid #e0e0e0;
+            margin: 30px 0;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+
+        .no-break {
+            page-break-inside: avoid;
+        }
+
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>AlApp - Felhasználói Útmutató</h1>
+
+    <div class="header-info">
+        <p><strong>Dunai Osztály Állományi Alkalmazás</strong></p>
+        <p>Verzió: 1.0.0<br>
+        Utolsó frissítés: 2026. február 23.</p>
+    </div>
+
+    <hr>
+
+    <div class="toc">
+        <h2>Tartalomjegyzék</h2>
+        <ol>
+            <li><a href="#bevezetes">Bevezetés</a></li>
+            <li><a href="#bejelentkezes">Bejelentkezés és Jogosultságok</a></li>
+            <li><a href="#dashboard">Dashboard (Kezdőlap)</a></li>
+            <li><a href="#szemelyzet">Személyzet Kezelése</a></li>
+            <li><a href="#jarmuvek">Járművek Kezelése</a></li>
+            <li><a href="#felszerelesek">Felszerelések Kezelése</a></li>
+            <li><a href="#viziletesitmenyek">Vízilétesítmények Kezelése</a></li>
+            <li><a href="#naptar">Naptár</a></li>
+            <li><a href="#incidensek">Incidensek</a></li>
+            <li><a href="#beallitasok">Beállítások</a></li>
+            <li><a href="#gyik">Gyakran Ismételt Kérdések</a></li>
+        </ol>
+    </div>
+
+    <hr>
+
+    <div class="page-break"></div>
+
+    <h2 id="bevezetes">1. Bevezetés</h2>
+
+    <h3>1.1 Mi az AlApp?</h3>
+    <p>Az AlApp a Dunai Osztály belső állományi nyilvántartó és menedzsment rendszere. Az alkalmazás célja, hogy központosított helyen kezelje a szervezet:</p>
+    <ul>
+        <li>Személyi állományát</li>
+        <li>Járműparkját</li>
+        <li>Felszereléseit</li>
+        <li>Vízilétesítményeit</li>
+        <li>Eseményeit és incidensjeit</li>
+    </ul>
+
+    <h3>1.2 Rendszerkövetelmények</h3>
+    <p><strong>Böngésző:</strong></p>
+    <ul>
+        <li>Google Chrome (ajánlott)</li>
+        <li>Mozilla Firefox</li>
+        <li>Safari</li>
+        <li>Microsoft Edge</li>
+    </ul>
+
+    <p><strong>Internetkapcsolat:</strong> Stabil internetkapcsolat szükséges az alkalmazás használatához.</p>
+    <p><strong>Képernyőfelbontás:</strong> Minimum 1280x720 pixel (ajánlott: 1920x1080)</p>
+
+    <h3>1.3 Elérés</h3>
+    <p>Az alkalmazás a következő címen érhető el:</p>
+    <pre><code>https://dunaialapp.netlify.app</code></pre>
+
+    <hr>
+
+    <h2 id="bejelentkezes">2. Bejelentkezés és Jogosultságok</h2>
+
+    <h3>2.1 Első Bejelentkezés</h3>
+    <p>Ha új felhasználóként meghívást kapott az AlApp-ba:</p>
+    <ol>
+        <li><strong>Email megérkezik</strong> a megadott címére</li>
+        <li><strong>Kattintson a meghívó linkre</strong> az emailben</li>
+        <li><strong>Jelszó beállítása:</strong>
+            <ul>
+                <li>Adjon meg egy erős jelszót (minimum 8 karakter)</li>
+                <li>A jelszónak tartalmaznia kell:
+                    <ul>
+                        <li>Kisbetűt (a-z)</li>
+                        <li>Nagybetűt (A-Z)</li>
+                        <li>Számot (0-9)</li>
+                        <li>Speciális karaktert (@$!%*?&)</li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+        <li><strong>Jelszó megerősítése</strong></li>
+        <li><strong>Kattintson a "Jelszó beállítása" gombra</strong></li>
+    </ol>
+
+    <div class="important">
+        <p><strong>Fontos:</strong> A jelszó beállítása kötelező! A rendszer nem engedi tovább anélkül.</p>
+    </div>
+
+    <h3>2.2 Normál Bejelentkezés</h3>
+    <ol>
+        <li>Nyissa meg a https://dunaialapp.netlify.app oldalt</li>
+        <li>Adja meg az <strong>email címét</strong></li>
+        <li>Adja meg a <strong>jelszavát</strong></li>
+        <li>Kattintson a <strong>"Bejelentkezés"</strong> gombra</li>
+    </ol>
+
+    <h3>2.3 Jogosultsági Szintek</h3>
+    <p>Az AlApp három jogosultsági szintet támogat:</p>
+
+    <div class="no-break">
+        <h4>Admin (Adminisztrátor)</h4>
+        <div class="success">
+            <p><strong>✅ Jogosultságok:</strong></p>
+            <ul>
+                <li>Teljes hozzáférés minden modulhoz</li>
+                <li>Felhasználók meghívása és kezelése</li>
+                <li>Rendszerbeállítások módosítása</li>
+                <li>Mező sémák szerkesztése</li>
+                <li>Audit log megtekintése</li>
+                <li>Minden adat létrehozása, szerkesztése, törlése</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="no-break">
+        <h4>User (Felhasználó)</h4>
+        <div class="success">
+            <p><strong>✅ Jogosultságok:</strong></p>
+            <ul>
+                <li>Adatok megtekintése</li>
+                <li>Adatok létrehozása és szerkesztése</li>
+                <li>Saját profil módosítása</li>
+                <li>Naptár események kezelése</li>
+                <li>Incidensek rögzítése</li>
+            </ul>
+        </div>
+        <div class="important">
+            <p><strong>❌ Nincs jogosultsága:</strong></p>
+            <ul>
+                <li>Felhasználók meghívása</li>
+                <li>Rendszerbeállítások módosítása</li>
+                <li>Más felhasználók törlése</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="no-break">
+        <h4>Reader (Olvasó)</h4>
+        <div class="success">
+            <p><strong>✅ Jogosultságok:</strong></p>
+            <ul>
+                <li>Adatok megtekintése</li>
+                <li>Riportok generálása</li>
+                <li>Exportálás</li>
+            </ul>
+        </div>
+        <div class="important">
+            <p><strong>❌ Nincs jogosultsága:</strong></p>
+            <ul>
+                <li>Adatok módosítása vagy törlése</li>
+                <li>Új adatok létrehozása</li>
+                <li>Rendszerbeállítások elérése</li>
+            </ul>
+        </div>
+    </div>
+
+    <h3>2.4 Jelszó Visszaállítás</h3>
+    <p>Ha elfelejtette a jelszavát:</p>
+    <ol>
+        <li>Kattintson az <strong>"Elfelejtett jelszó?"</strong> linkre a bejelentkezési oldalon</li>
+        <li>Adja meg az <strong>email címét</strong></li>
+        <li>Kattintson a <strong>"Jelszó visszaállítás küldése"</strong> gombra</li>
+        <li>Ellenőrizze az <strong>email fiókját</strong></li>
+        <li>Kattintson a kapott linkre és <strong>állítson be új jelszót</strong></li>
+    </ol>
+
+    <div class="page-break"></div>
+
+    <hr>
+
+    <h2 id="dashboard">3. Dashboard (Kezdőlap)</h2>
+
+    <h3>3.1 Áttekintés</h3>
+    <p>A Dashboard az alkalmazás főoldala, ahol a legfontosabb információk gyors áttekintése található.</p>
+
+    <h3>3.2 Kimutatások</h3>
+    <p><strong>Bal oldali kártyák:</strong></p>
+    <ul>
+        <li><strong>Személyzet:</strong> Aktív személyzet létszáma</li>
+        <li><strong>Járművek:</strong> Üzemképes járművek száma</li>
+        <li><strong>Felszerelések:</strong> Elérhető felszerelések darabszáma</li>
+        <li><strong>Vízilétesítmények:</strong> Nyilvántartott létesítmények száma</li>
+    </ul>
+
+    <h3>3.3 Születésnapok</h3>
+    <p>A Dashboard megjeleníti az <strong>aktuális hónapban született</strong> kollégákat, kronológikus sorrendben.</p>
+    <p><strong>Megjelenített információk:</strong></p>
+    <ul>
+        <li>Név</li>
+        <li>Születési dátum</li>
+        <li>Életkor</li>
+    </ul>
+
+    <h3>3.4 Navigáció</h3>
+    <p>A bal oldali menüből az alábbi modulok érhetők el:</p>
+    <ul>
+        <li>🏠 Dashboard (Kezdőlap)</li>
+        <li>👥 Személyzet</li>
+        <li>🚗 Járművek</li>
+        <li>🧰 Felszerelés</li>
+        <li>💧 Vízilétesítmények</li>
+        <li>📅 Naptár</li>
+        <li>⚠️ Incidensek</li>
+        <li>⚙️ Beállítások (csak adminoknak)</li>
+    </ul>
+
+    <hr>
+
+    <h2 id="szemelyzet">4. Személyzet Kezelése</h2>
+
+    <h3>4.1 Személyzet Lista</h3>
+    <p><strong>Elérés:</strong> Bal oldali menü → <strong>Személyzet</strong></p>
+
+    <p><strong>Funkciók:</strong></p>
+    <ul>
+        <li>✅ Teljes személyzeti lista megtekintése</li>
+        <li>✅ Keresés név, email vagy telefonszám alapján</li>
+        <li>✅ Szűrés státusz szerint (Aktív / Inaktív)</li>
+        <li>✅ Rendezés oszlopok szerint</li>
+    </ul>
+
+    <p><strong>Megjelenített adatok:</strong></p>
+    <ul>
+        <li>Fénykép</li>
+        <li>Teljes név</li>
+        <li>Beosztás</li>
+        <li>Email cím</li>
+        <li>Telefonszám</li>
+        <li>Státusz (Aktív / Inaktív)</li>
+    </ul>
+
+    <h3>4.2 Új Személy Hozzáadása</h3>
+    <ol>
+        <li>Kattintson a <strong>"+ Személy hozzáadása"</strong> gombra (jobb felső sarok)</li>
+        <li>Töltse ki a kötelező mezőket:
+            <ul>
+                <li><strong>Teljes név</strong> *</li>
+                <li><strong>Email cím</strong> *</li>
+                <li><strong>Telefonszám</strong></li>
+                <li><strong>Születési dátum</strong></li>
+                <li><strong>Beosztás</strong></li>
+                <li><strong>Cím</strong></li>
+            </ul>
+        </li>
+        <li>Opcionális mezők:
+            <ul>
+                <li>Fénykép feltöltése</li>
+                <li>Megjegyzések</li>
+                <li>Egyéni mezők (ha konfigurálva vannak)</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+    <p><em>* Kötelező mezők</em></p>
+
+    <h3>4.3 Személy Adatainak Megtekintése és Szerkesztése</h3>
+    <ol>
+        <li>Kattintson a <strong>személyre</strong> a listában</li>
+        <li><strong>Részletes adatlap</strong> nyílik meg:
+            <ul>
+                <li>Alapadatok</li>
+                <li>Kapcsolattartási információk</li>
+                <li>Egyéni mezők</li>
+                <li>Kapcsolódó események és incidensek</li>
+            </ul>
+        </li>
+    </ol>
+
+    <p><strong>Szerkesztés:</strong></p>
+    <ol>
+        <li>Kattintson a <strong>"Szerkesztés"</strong> gombra (jobb felső sarok)</li>
+        <li>Módosítsa a szükséges mezőket</li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+
+    <h3>4.4 Személy Deaktiválása</h3>
+    <div class="important">
+        <p><strong>Fontos:</strong> A rendszer nem törli a személyeket, csak deaktiválja őket.</p>
+    </div>
+
+    <ol>
+        <li>Nyissa meg a személy adatlapját</li>
+        <li>Kattintson a <strong>"Deaktiválás"</strong> gombra</li>
+        <li>Erősítse meg a műveletet</li>
+    </ol>
+
+    <p><strong>Deaktivált személyek:</strong></p>
+    <ul>
+        <li>Nem jelennek meg a listában (kivéve ha "Inaktív" szűrőt választ)</li>
+        <li>Adataik megmaradnak a rendszerben</li>
+        <li>Bármikor újra aktiválhatók</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <hr>
+
+    <h2 id="jarmuvek">5. Járművek Kezelése</h2>
+
+    <h3>5.1 Járműlista</h3>
+    <p><strong>Elérés:</strong> Bal oldali menü → <strong>Járművek</strong></p>
+
+    <p><strong>Funkciók:</strong></p>
+    <ul>
+        <li>✅ Teljes járműlista megtekintése</li>
+        <li>✅ Keresés rendszám, típus vagy modell alapján</li>
+        <li>✅ Szűrés státusz szerint (Üzemképes / Javítás alatt / Selejtezett)</li>
+        <li>✅ Karbantartási előzmények megtekintése</li>
+    </ul>
+
+    <p><strong>Megjelenített adatok:</strong></p>
+    <ul>
+        <li>Fénykép</li>
+        <li>Rendszám</li>
+        <li>Típus (pl. Tűzoltóautó, Mentőautó, stb.)</li>
+        <li>Modell</li>
+        <li>Évjárat</li>
+        <li>Státusz</li>
+        <li>Következő szerviz időpontja</li>
+    </ul>
+
+    <h3>5.2 Új Jármű Hozzáadása</h3>
+    <ol>
+        <li>Kattintson a <strong>"+ Jármű hozzáadása"</strong> gombra</li>
+        <li>Töltse ki a kötelező mezőket:
+            <ul>
+                <li><strong>Rendszám</strong> *</li>
+                <li><strong>Típus</strong> *</li>
+                <li><strong>Modell</strong></li>
+                <li><strong>Évjárat</strong></li>
+                <li><strong>Státusz</strong> *</li>
+            </ul>
+        </li>
+        <li>Opcionális mezők:
+            <ul>
+                <li>Fénykép feltöltése</li>
+                <li>Alvázszám</li>
+                <li>Motorszám</li>
+                <li>Kilométeróra állása</li>
+                <li>Következő szerviz időpontja</li>
+                <li>Megjegyzések</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+
+    <h3>5.3 Gyors Riport Funkció</h3>
+    <p>A járműveknél elérhető egy <strong>gyors riport funkció</strong>, amely lehetővé teszi a műszaki állapot gyors rögzítését.</p>
+
+    <p><strong>Használat:</strong></p>
+    <ol>
+        <li>Kattintson a <strong>"Gyors riport"</strong> gombra a jármű mellett</li>
+        <li>Töltse ki a riportot:
+            <ul>
+                <li>Kilométeróra állása</li>
+                <li>Üzemanyag szint</li>
+                <li>Műszaki állapot</li>
+                <li>Problémák (ha vannak)</li>
+                <li>Megjegyzések</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Riport küldése"</strong> gombra</li>
+    </ol>
+
+    <div class="info">
+        <p><strong>A riport automatikusan:</strong></p>
+        <ul>
+            <li>Rögzíti az aktuális időpontot</li>
+            <li>Hozzárendeli az aktuális felhasználót</li>
+            <li>Elmentődik a jármű előzményeihez</li>
+        </ul>
+    </div>
+
+    <h3>5.4 Karbantartási Napló</h3>
+    <p>Minden járműnél megtekinthető a <strong>karbantartási napló</strong>, amely tartalmazza:</p>
+    <ul>
+        <li>Szerviz dátumok</li>
+        <li>Elvégzett munkák</li>
+        <li>Költségek</li>
+        <li>Következő szerviz időpontja</li>
+    </ul>
+
+    <hr>
+
+    <h2 id="felszerelesek">6. Felszerelések Kezelése</h2>
+
+    <h3>6.1 Felszerelés Lista</h3>
+    <p><strong>Elérés:</strong> Bal oldali menü → <strong>Felszerelés</strong></p>
+
+    <p><strong>Kategóriák:</strong></p>
+    <ul>
+        <li>Védőfelszerelések</li>
+        <li>Kéziszerszámok</li>
+        <li>Technikai eszközök</li>
+        <li>Egyéb felszerelések</li>
+    </ul>
+
+    <p><strong>Funkciók:</strong></p>
+    <ul>
+        <li>✅ Teljes felszerelés lista megtekintése</li>
+        <li>✅ Keresés név vagy sorozatszám alapján</li>
+        <li>✅ Szűrés kategória és státusz szerint</li>
+        <li>✅ Lejárati dátumok követése</li>
+    </ul>
+
+    <p><strong>Megjelenített adatok:</strong></p>
+    <ul>
+        <li>Fénykép</li>
+        <li>Megnevezés</li>
+        <li>Kategória</li>
+        <li>Sorozatszám</li>
+        <li>Darabszám</li>
+        <li>Státusz</li>
+        <li>Lejárati dátum</li>
+    </ul>
+
+    <h3>6.2 Új Felszerelés Hozzáadása</h3>
+    <ol>
+        <li>Kattintson a <strong>"+ Felszerelés hozzáadása"</strong> gombra</li>
+        <li>Töltse ki a mezőket:
+            <ul>
+                <li><strong>Megnevezés</strong> *</li>
+                <li><strong>Kategória</strong> *</li>
+                <li><strong>Sorozatszám</strong></li>
+                <li><strong>Darabszám</strong> *</li>
+                <li><strong>Státusz</strong> *</li>
+                <li><strong>Lejárati dátum</strong> (ha van)</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+
+    <h3>6.3 Lejárati Figyelmeztetések</h3>
+    <p>A rendszer automatikusan figyelmeztet, ha egy felszerelés:</p>
+    <ul>
+        <li><strong>30 napon belül lejár</strong> - Sárga jelzés</li>
+        <li><strong>Már lejárt</strong> - Piros jelzés</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <hr>
+
+    <h2 id="viziletesitmenyek">7. Vízilétesítmények Kezelése</h2>
+
+    <h3>7.1 Létesítmények Lista</h3>
+    <p><strong>Elérés:</strong> Bal oldali menü → <strong>Vízilétesítmények</strong></p>
+
+    <p><strong>Funkciók:</strong></p>
+    <ul>
+        <li>✅ Teljes létesítmény lista</li>
+        <li>✅ Térkép nézet (GPS koordináták alapján)</li>
+        <li>✅ Keresés név vagy cím alapján</li>
+        <li>✅ Szűrés típus és státusz szerint</li>
+    </ul>
+
+    <p><strong>Megjelenített adatok:</strong></p>
+    <ul>
+        <li>Név</li>
+        <li>Típus (pl. Tűzcsap, Medence, Tó, stb.)</li>
+        <li>Cím</li>
+        <li>GPS koordináták</li>
+        <li>Státusz (Működő / Karbantartás alatt / Nem működik)</li>
+        <li>Utolsó ellenőrzés dátuma</li>
+    </ul>
+
+    <h3>7.2 Új Létesítmény Hozzáadása</h3>
+    <ol>
+        <li>Kattintson a <strong>"+ Létesítmény hozzáadása"</strong> gombra</li>
+        <li>Töltse ki a mezőket:
+            <ul>
+                <li><strong>Név</strong> *</li>
+                <li><strong>Típus</strong> *</li>
+                <li><strong>Cím</strong> *</li>
+                <li><strong>GPS koordináták</strong> (szélesség, hosszúság)</li>
+                <li><strong>Státusz</strong> *</li>
+                <li><strong>Kapacitás</strong> (ha releváns)</li>
+                <li><strong>Megjegyzések</strong></li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+
+    <h3>7.3 Térkép Nézet</h3>
+    <p>A létesítmények megtekinthetők <strong>térképen</strong> is:</p>
+    <ol>
+        <li>Kattintson a <strong>"Térkép nézet"</strong> gombra</li>
+        <li>A létesítmények <strong>piros markerekkel</strong> jelennek meg</li>
+        <li>Kattintson egy <strong>markerre</strong> a részletek megtekintéséhez</li>
+    </ol>
+
+    <hr>
+
+    <h2 id="naptar">8. Naptár</h2>
+
+    <h3>8.1 Naptár Nézet</h3>
+    <p><strong>Elérés:</strong> Bal oldali menü → <strong>Naptár</strong></p>
+
+    <p><strong>Nézetek:</strong></p>
+    <ul>
+        <li><strong>Hónap nézet</strong> - Teljes hónap áttekintése</li>
+        <li><strong>Hét nézet</strong> - Részletes heti nézet</li>
+        <li><strong>Nap nézet</strong> - Egy nap eseményei óránkénti bontásban</li>
+    </ul>
+
+    <h3>8.2 Események Típusai</h3>
+    <p>A naptárban különböző típusú események jelennek meg:</p>
+    <ul>
+        <li>🚗 <strong>Járműszerviz</strong> - Tervezett karbantartások</li>
+        <li>📅 <strong>Esemény</strong> - Szervezeti események</li>
+        <li>🎂 <strong>Születésnap</strong> - Kollégák születésnapjai (automatikus)</li>
+        <li>🧰 <strong>Felszerelés karbantartás</strong> - Tervezett felszerelés ellenőrzések</li>
+    </ul>
+
+    <h3>8.3 Új Esemény Létrehozása</h3>
+    <ol>
+        <li>Kattintson a <strong>"+ Esemény hozzáadása"</strong> gombra vagy kattintson a naptár egy napjára</li>
+        <li>Töltse ki az esemény adatait:
+            <ul>
+                <li><strong>Cím</strong> *</li>
+                <li><strong>Dátum és időpont</strong> *</li>
+                <li><strong>Típus</strong> *</li>
+                <li><strong>Leírás</strong></li>
+                <li><strong>Helyszín</strong></li>
+                <li><strong>Résztvevők</strong> (több személy is kiválasztható)</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+
+    <h3>8.4 Esemény Szerkesztése vagy Törlése</h3>
+    <ol>
+        <li>Kattintson az <strong>eseményre</strong> a naptárban</li>
+        <li><strong>Szerkesztés:</strong> Módosítsa az adatokat és kattintson a <strong>"Mentés"</strong> gombra</li>
+        <li><strong>Törlés:</strong> Kattintson a <strong>"Törlés"</strong> gombra és erősítse meg</li>
+    </ol>
+
+    <hr>
+
+    <h2 id="incidensek">9. Incidensek</h2>
+
+    <h3>9.1 Incidensek Lista</h3>
+    <p><strong>Elérés:</strong> Bal oldali menü → <strong>Incidensek</strong></p>
+
+    <p><strong>Funkciók:</strong></p>
+    <ul>
+        <li>✅ Teljes incidens lista</li>
+        <li>✅ Keresés leírás vagy helyszín alapján</li>
+        <li>✅ Szűrés típus, státusz és dátum szerint</li>
+        <li>✅ Részletes incidens riportok</li>
+    </ul>
+
+    <p><strong>Megjelenített adatok:</strong></p>
+    <ul>
+        <li>Dátum és időpont</li>
+        <li>Típus</li>
+        <li>Helyszín</li>
+        <li>Leírás (rövid)</li>
+        <li>Státusz (Aktív / Lezárt)</li>
+        <li>Rögzítette (felhasználó neve)</li>
+    </ul>
+
+    <h3>9.2 Új Incidens Rögzítése</h3>
+    <ol>
+        <li>Kattintson a <strong>"+ Incidens rögzítése"</strong> gombra</li>
+        <li>Töltse ki az incidens adatait:
+            <ul>
+                <li><strong>Típus</strong> * (pl. Tűz, Baleset, Műszaki hiba, stb.)</li>
+                <li><strong>Dátum és időpont</strong> *</li>
+                <li><strong>Helyszín</strong> *</li>
+                <li><strong>Részletes leírás</strong> *</li>
+                <li><strong>Érintett személyek</strong> (ha vannak)</li>
+                <li><strong>Érintett járművek</strong> (ha vannak)</li>
+                <li><strong>Érintett felszerelések</strong> (ha vannak)</li>
+                <li><strong>Fotók feltöltése</strong> (opcionális)</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+
+    <h3>9.3 Incidens Részletei</h3>
+    <p>Az incidens részletes adatlapján megtekinthető:</p>
+    <ul>
+        <li>Teljes leírás</li>
+        <li>Időbélyegzők</li>
+        <li>Érintett erőforrások</li>
+        <li>Csatolt fájlok és fotók</li>
+        <li>Kapcsolódó jelentések</li>
+    </ul>
+
+    <h3>9.4 Incidens Lezárása</h3>
+    <ol>
+        <li>Nyissa meg az incidens részletes adatlapját</li>
+        <li>Kattintson a <strong>"Lezárás"</strong> gombra</li>
+        <li>Adjon hozzá <strong>záró megjegyzést</strong> (opcionális)</li>
+        <li>Erősítse meg a lezárást</li>
+    </ol>
+
+    <p><strong>Lezárt incidensek:</strong></p>
+    <ul>
+        <li>Megmaradnak a rendszerben</li>
+        <li>Nem szerkeszthetők többé</li>
+        <li>Archiválásra kerülnek</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <hr>
+
+    <h2 id="beallitasok">10. Beállítások</h2>
+
+    <div class="important">
+        <p><strong>Elérés:</strong> Bal oldali menü → <strong>Beállítások</strong> (csak adminoknak elérhető!)</p>
+    </div>
+
+    <h3>10.1 Felhasználók Kezelése</h3>
+    <p><strong>Funkció:</strong> Új felhasználók meghívása és meglévő felhasználók kezelése.</p>
+
+    <h4>Új Felhasználó Meghívása</h4>
+    <ol>
+        <li>Kattintson a <strong>"Felhasználó meghívása"</strong> gombra</li>
+        <li>Töltse ki a mezőket:
+            <ul>
+                <li><strong>Email cím</strong> *</li>
+                <li><strong>Teljes név</strong> *</li>
+                <li><strong>Szerepkör</strong> * (Admin / User / Reader)</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Meghívó küldése"</strong> gombra</li>
+    </ol>
+
+    <div class="info">
+        <p><strong>Meghívási folyamat:</strong></p>
+        <ol>
+            <li>A rendszer emailt küld a megadott címre</li>
+            <li>A felhasználó megkapja a meghívó linket</li>
+            <li>A link segítségével beállítja a jelszavát</li>
+            <li>Ezután bejelentkezhet a rendszerbe</li>
+        </ol>
+    </div>
+
+    <h4>Felhasználó Szerepkör Módosítása</h4>
+    <ol>
+        <li>Keresse meg a felhasználót a listában</li>
+        <li>Kattintson a <strong>szerepkör</strong> melletti legördülő menüre</li>
+        <li>Válassza ki az új szerepkört</li>
+        <li>A módosítás <strong>automatikusan mentésre</strong> kerül</li>
+    </ol>
+
+    <h4>Felhasználó Deaktiválása</h4>
+    <ol>
+        <li>Keresse meg a felhasználót a listában</li>
+        <li>Kattintson a <strong>"Deaktiválás"</strong> gombra</li>
+        <li>Erősítse meg a műveletet</li>
+    </ol>
+
+    <p><strong>Deaktivált felhasználók:</strong></p>
+    <ul>
+        <li>Nem tudnak bejelentkezni</li>
+        <li>Adataik megmaradnak a rendszerben</li>
+        <li>Bármikor újra aktiválhatók</li>
+    </ul>
+
+    <h3>10.2 Mező Sémák (Field Schemas)</h3>
+    <p><strong>Funkció:</strong> Egyéni mezők definiálása az egyes modulokhoz (Személyzet, Járművek, Felszerelés, stb.).</p>
+
+    <p><strong>Példa egyéni mezők:</strong></p>
+    <ul>
+        <li>Személyzetnél: "Végtípus", "Lakcím kerület", "Jogosítvány kategóriák"</li>
+        <li>Járműveknél: "Utolsó olajcsere", "Gumik állapota"</li>
+        <li>Felszerelésekhez: "Tanúsítvány száma", "Gyártó"</li>
+    </ul>
+
+    <p><strong>Új mező hozzáadása:</strong></p>
+    <ol>
+        <li>Válassza ki a <strong>modult</strong> (pl. "Personnel")</li>
+        <li>Kattintson a <strong>"+ Új mező"</strong> gombra</li>
+        <li>Adja meg a mező adatait:
+            <ul>
+                <li><strong>Név</strong> * (belső azonosító)</li>
+                <li><strong>Megjelenítési név</strong> * (magyar nyelvű név)</li>
+                <li><strong>Típus</strong> * (Szöveg, Szám, Dátum, Legördülő lista, stb.)</li>
+                <li><strong>Kötelező</strong> (igen/nem)</li>
+            </ul>
+        </li>
+        <li>Kattintson a <strong>"Mentés"</strong> gombra</li>
+    </ol>
+
+    <div class="success">
+        <p><strong>Az új mező azonnal megjelenik</strong> a modul adatlapjain!</p>
+    </div>
+
+    <h3>10.3 Feature Flags (Funkció Kapcsolók)</h3>
+    <p><strong>Funkció:</strong> Bizonyos funkciók be- és kikapcsolása a rendszerben.</p>
+
+    <p><strong>Elérhető kapcsolók:</strong></p>
+    <ul>
+        <li><strong>Naptár modul</strong> - Naptár funkció engedélyezése/tiltása</li>
+        <li><strong>Incidensek modul</strong> - Incidens rögzítés engedélyezése/tiltása</li>
+        <li><strong>Térkép nézet</strong> - Térképes megjelenítés engedélyezése/tiltása</li>
+    </ul>
+
+    <p><strong>Kapcsoló módosítása:</strong></p>
+    <ol>
+        <li>Keresse meg a funkciót a listában</li>
+        <li>Kattintson a <strong>kapcsolóra</strong> (BE/KI)</li>
+        <li>A módosítás <strong>azonnal életbe lép</strong></li>
+    </ol>
+
+    <h3>10.4 Audit Log (Műveleti Napló)</h3>
+    <p><strong>Funkció:</strong> A rendszerben végrehajtott műveletek naplózása.</p>
+
+    <p><strong>Naplózott műveletek:</strong></p>
+    <ul>
+        <li>Bejelentkezések</li>
+        <li>Adatok létrehozása, módosítása, törlése</li>
+        <li>Felhasználók meghívása</li>
+        <li>Beállítások módosítása</li>
+    </ul>
+
+    <p><strong>Megjelenített információk:</strong></p>
+    <ul>
+        <li>Időpont</li>
+        <li>Művelet típusa</li>
+        <li>Felhasználó neve</li>
+        <li>Érintett tábla/modul</li>
+        <li>Módosított adatok (előző és új érték)</li>
+    </ul>
+
+    <p><strong>Szűrés:</strong></p>
+    <ul>
+        <li>Dátum szerint</li>
+        <li>Felhasználó szerint</li>
+        <li>Művelet típus szerint</li>
+        <li>Tábla szerint</li>
+    </ul>
+
+    <div class="page-break"></div>
+
+    <hr>
+
+    <h2 id="gyik">11. Gyakran Ismételt Kérdések</h2>
+
+    <h3>Általános Kérdések</h3>
+
+    <div class="no-break">
+        <p><strong>K: Hogyan változtathatom meg a jelszavamat?</strong></p>
+        <p><strong>V:</strong> Kattintson a jobb felső sarokban a profil ikonra, majd válassza a "Profil beállítások" menüpontot. Itt módosíthatja a jelszavát.</p>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: Elfelejtettém a jelszavamat, mit tegyek?</strong></p>
+        <p><strong>V:</strong> A bejelentkezési oldalon kattintson az "Elfelejtett jelszó?" linkre, adja meg az email címét, és a rendszer küld egy jelszó visszaállítási linket.</p>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: Miért nem tudok új felhasználót meghívni?</strong></p>
+        <p><strong>V:</strong> Csak admin jogosultsággal rendelkező felhasználók hívhatnak meg új felhasználókat. Ellenőrizze a jogosultsági szintjét.</p>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: Hogyan tudom törölni az adatokat?</strong></p>
+        <p><strong>V:</strong> A rendszer nem törli véglegesen az adatokat, csak deaktiválja őket. Minden deaktivált adat visszaállítható.</p>
+    </div>
+
+    <h3>Műszaki Kérdések</h3>
+
+    <div class="no-break">
+        <p><strong>K: Milyen böngészőt használjak?</strong></p>
+        <p><strong>V:</strong> Az alkalmazás a modern böngészők legújabb verzióival működik. Javasolt: Google Chrome, Mozilla Firefox, Safari, Microsoft Edge.</p>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: Működik az alkalmazás mobilon?</strong></p>
+        <p><strong>V:</strong> Igen, az alkalmazás reszponzív dizájnnal rendelkezik, így mobilon és tableten is használható.</p>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: Offline is használható az alkalmazás?</strong></p>
+        <p><strong>V:</strong> Nem, az alkalmazás használatához stabil internetkapcsolat szükséges.</p>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: Biztonságosak az adataim?</strong></p>
+        <p><strong>V:</strong> Igen, az adatok titkosított formában tárolódnak a Supabase felhőben. A kommunikáció HTTPS protokollon keresztül történik.</p>
+    </div>
+
+    <h3>Hibaelhárítás</h3>
+
+    <div class="no-break">
+        <p><strong>K: Nem töltődik be az oldal, mit tegyek?</strong></p>
+        <p><strong>V:</strong></p>
+        <ol>
+            <li>Frissítse az oldalt (Ctrl+R vagy Cmd+R)</li>
+            <li>Törölje a böngésző cache-ét</li>
+            <li>Próbáljon meg másik böngészőt használni</li>
+            <li>Ellenőrizze az internetkapcsolatot</li>
+        </ol>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: A meghívó email nem érkezik meg, mit tegyek?</strong></p>
+        <p><strong>V:</strong></p>
+        <ol>
+            <li>Ellenőrizze a spam/levélszemét mappát</li>
+            <li>Várjon 5-10 percet, lehet hogy késik az email</li>
+            <li>Kérjen új meghívót az adminisztrátortól</li>
+        </ol>
+    </div>
+
+    <div class="no-break">
+        <p><strong>K: "Hozzáférés megtagadva" hibaüzenetet kapok, mit jelent?</strong></p>
+        <p><strong>V:</strong> Nincs megfelelő jogosultsága az adott művelethez. Lépjen kapcsolatba az adminisztrátorral a jogosultságok ellenőrzéséhez.</p>
+    </div>
+
+    <hr>
+
+    <h2>Kapcsolat és Támogatás</h2>
+
+    <h3>Technikai Támogatás</h3>
+    <p>Ha technikai problémát tapasztal vagy kérdése van az alkalmazással kapcsolatban:</p>
+
+    <p><strong>Email:</strong> support@dunaiosztaly.hu<br>
+    <strong>Telefon:</strong> +36 XX XXX XXXX</p>
+
+    <p><strong>Nyitvatartás:</strong></p>
+    <ul>
+        <li>Hétfő-Péntek: 8:00 - 16:00</li>
+        <li>Hétvégén: Nincs támogatás</li>
+    </ul>
+
+    <h3>Hibajelentés</h3>
+    <p>Kérjük, hibajelentésnél adja meg:</p>
+    <ul>
+        <li>A hiba pontos leírását</li>
+        <li>Mit csinált amikor a hiba történt</li>
+        <li>Milyen böngészőt használ</li>
+        <li>Képernyőkép a hibáról (ha lehetséges)</li>
+    </ul>
+
+    <hr>
+
+    <h2>Verzióinformáció</h2>
+
+    <p><strong>Aktuális verzió:</strong> 1.0.0<br>
+    <strong>Kiadás dátuma:</strong> 2026. február 23.</p>
+
+    <p><strong>Főbb funkciók:</strong></p>
+    <ul>
+        <li>✅ Személyzet nyilvántartás</li>
+        <li>✅ Járműkezelés</li>
+        <li>✅ Felszerelés nyilvántartás</li>
+        <li>✅ Vízilétesítmények kezelése</li>
+        <li>✅ Naptár és eseménykezelés</li>
+        <li>✅ Incidens rögzítés</li>
+        <li>✅ Felhasználó kezelés (meghívás, szerepkörök)</li>
+        <li>✅ Egyéni mezők</li>
+        <li>✅ Audit log</li>
+    </ul>
+
+    <hr>
+
+    <h2>Jogi Információk</h2>
+
+    <h3>Szerzői Jogok</h3>
+    <p>© 2026 Dunai Osztály. Minden jog fenntartva.</p>
+    <p>Az AlApp alkalmazás és dokumentációja szerzői jogi védelem alatt áll.</p>
+
+    <h3>Adatvédelem</h3>
+    <p>Az alkalmazás használata során rögzített adatok kezelése a GDPR (Általános Adatvédelmi Rendelet) előírásainak megfelelően történik.</p>
+
+    <p><strong>Adatkezelő:</strong> Dunai Osztály<br>
+    <strong>Adatvédelmi tisztviselő:</strong> [Név]<br>
+    <strong>Email:</strong> privacy@dunaiosztaly.hu</p>
+
+    <h3>Felelősség Kizárása</h3>
+    <p>Az AlApp fejlesztői minden tőlük telhetőt megtesznek a rendszer stabilitásáért és az adatok biztonságáért, azonban nem vállalnak felelősséget az esetleges adatvesztésért vagy rendszerhibákért.</p>
+
+    <p><strong>Javasoljuk:</strong></p>
+    <ul>
+        <li>Rendszeres adatmentést</li>
+        <li>Gondos adatkezelést</li>
+        <li>Erős jelszavak használatát</li>
+    </ul>
+
+    <div class="footer">
+        <p><strong>Utolsó frissítés:</strong> 2026. február 23.<br>
+        <strong>Verzió:</strong> 1.0.0<br>
+        <strong>Készítette:</strong> Dunai Osztály IT Csapat</p>
+    </div>
+</body>
+</html>
