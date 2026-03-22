@@ -20,7 +20,8 @@ export const SetupPasswordPage = () => {
     const [touched, setTouched] = useState(false);
 
     const validation = validatePassword(password);
-    const passwordsMatch = password === confirmPassword;
+    // Constant-time comparison to avoid timing side-channel attacks (CWE-208)
+    const passwordsMatch = password.length > 0 && timingSafeEqual(password, confirmPassword);
     const canSubmit = validation.isValid && passwordsMatch && confirmPassword.length > 0;
 
     const handleSubmit = useCallback(
@@ -364,6 +365,16 @@ export const SetupPasswordPage = () => {
         </div>
     );
 };
+
+// Constant-time string comparison to prevent timing side-channel attacks (CWE-208)
+function timingSafeEqual(a: string, b: string): boolean {
+    if (a.length !== b.length) return false;
+    let diff = 0;
+    for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return diff === 0;
+}
 
 // Segéd komponens a követelmények megjelenítéséhez
 function RequirementItem({ met, text }: { met: boolean; text: string }) {

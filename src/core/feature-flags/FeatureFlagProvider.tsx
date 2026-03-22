@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, type ReactNode } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/core/auth/useAuth';
 import type { FeatureFlags } from '@/shared/types';
 
 // Alapértelmezett feature flag értékek
@@ -27,11 +28,17 @@ interface FeatureFlagProviderProps {
 }
 
 export function FeatureFlagProvider({ children }: FeatureFlagProviderProps) {
+    const { user } = useAuth();
     const [flags, setFlags] = useState<FeatureFlags>(DEFAULT_FLAGS);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Feature flagek betöltése a Supabase-ből
+    // Feature flagek betöltése a Supabase-ből – csak autentikált session esetén
     useEffect(() => {
+        if (!user) {
+            setIsLoading(false);
+            return;
+        }
+
         async function loadFlags() {
             try {
                 const { data, error } = await supabase
@@ -61,7 +68,7 @@ export function FeatureFlagProvider({ children }: FeatureFlagProviderProps) {
         }
 
         loadFlags();
-    }, []);
+    }, [user]);
 
     // Egyetlen flag ellenőrzése
     const isEnabled = (key: keyof FeatureFlags): boolean => {

@@ -31,7 +31,9 @@
         "reset_password_button": "Visszaállító link küldése",
         "reset_password_success": "Visszaállító link elküldve!",
         "login_error": "Hibás email cím vagy jelszó.",
-        "magic_link_success": "Magic link elküldve az email címedre!"
+        "magic_link_success": "Magic link elküldve az email címedre!",
+        "email_placeholder": "pelda@email.hu",
+        "password_placeholder": "Jelszó"
     },
     "dashboard": {
         "title": "Áttekintés",

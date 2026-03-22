@@ -1,4 +1,9 @@
 
+[functions.invite-user]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/invite-user/index.ts"
+
 [functions.database-backup]
 enabled = true
 verify_jwt = true

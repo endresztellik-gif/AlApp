@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/core/auth/useAuth';
-import { Mail, Lock, ArrowRight, Loader2, Leaf, FlaskConical } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, Leaf } from 'lucide-react';
 
 /**
  * Bejelentkezési oldal – email/jelszó vagy Magic Link.
@@ -135,21 +135,6 @@ export const LoginPage = () => {
                 transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                 className="relative w-full max-w-[400px]"
             >
-                {/* Fejlesztési banner */}
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="mb-3 rounded-xl overflow-hidden"
-                >
-                    <div className="dev-banner px-4 py-2 flex items-center gap-2">
-                        <FlaskConical className="w-3.5 h-3.5 text-secondary-700 flex-shrink-0" />
-                        <span className="text-[11px] font-semibold text-secondary-700">
-                            Az alkalmazás fejlesztés alatt áll
-                        </span>
-                    </div>
-                </motion.div>
-
                 {/* Fő login kártya */}
                 <div
                     className="rounded-2xl border border-white/70 p-8"
