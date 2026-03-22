@@ -27,7 +27,7 @@ export const LoginPage = () => {
             setError(null);
             try {
                 await signIn(email, password);
-                navigate('/dashboard', { replace: true });
+                navigate('/', { replace: true });
             } catch (err: unknown) {
                 console.error('[LoginPage] Login error:', err);
                 setError(t('auth.login_error'));
