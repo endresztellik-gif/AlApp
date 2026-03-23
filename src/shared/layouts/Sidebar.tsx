@@ -11,7 +11,6 @@ import {
     AlertTriangle,
     Settings,
     X,
-    FlaskConical,
     Download,
     Droplets,
     LogOut
@@ -168,16 +167,6 @@ export function Sidebar({ mobile, onClose }: SidebarProps) {
             <div className="px-3 pb-4 space-y-0.5">
                 {/* Divider */}
                 <div className="mx-1 mb-3 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-
-                {/* Fejlesztési sáv */}
-                <div className="mb-3 mx-1 rounded-xl overflow-hidden">
-                    <div className="dev-banner px-3 py-2 flex items-center gap-2">
-                        <FlaskConical className="w-3.5 h-3.5 text-secondary-700 flex-shrink-0" />
-                        <span className="text-[10px] font-semibold text-secondary-700 tracking-wide">
-                            {t('sidebar.dev_banner')}
-                        </span>
-                    </div>
-                </div>
 
                 {bottomNavItems.map((item) => (
                     <NavLink

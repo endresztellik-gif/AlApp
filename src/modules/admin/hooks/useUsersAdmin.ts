@@ -28,27 +28,12 @@ export function useUsersAdmin() {
     const query = useQuery({
         queryKey: ['admin', 'users'],
         queryFn: async (): Promise<UserRow[]> => {
-            // Get user_profiles
             const { data: profiles, error: profileError } = await supabase
                 .from('user_profiles')
                 .select('*')
                 .order('full_name');
             if (profileError) throw profileError;
-
-            // Get auth metadata
-            const { data: { users: authUsers }, error: authError } =
-                await supabase.auth.admin.listUsers();
-            if (authError) throw authError;
-
-            // Merge data
-            return profiles.map(profile => {
-                const authUser = authUsers.find(u => u.id === profile.id);
-                return {
-                    ...profile,
-                    email_confirmed_at: authUser?.email_confirmed_at,
-                    invited_at: authUser?.invited_at,
-                };
-            });
+            return profiles ?? [];
         },
     });
 
