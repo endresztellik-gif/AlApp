@@ -20,6 +20,7 @@ import { SetupPasswordPage } from '@/core/auth/SetupPasswordPage';
 import { WaterFacilitiesListPage } from '@/modules/water-facilities/pages/WaterFacilitiesListPage';
 import { WaterFacilityDetailPage } from '@/modules/water-facilities/pages/WaterFacilityDetailPage';
 import { QuickReportPage } from '@/modules/vehicles/pages/QuickReportPage';
+import { RemindersPage } from '@/modules/reminders/pages/RemindersPage';
 
 /**
  * AlApp routing konfiguráció.
@@ -58,6 +59,9 @@ export const router = createBrowserRouter([
             // Water Facilities Module
             { path: 'water-facilities', element: <WaterFacilitiesListPage /> },
             { path: 'water-facilities/:id', element: <WaterFacilityDetailPage /> },
+
+            // Személyes emlékeztetők (csak a tulajdonos látja)
+            { path: 'reminders', element: <RemindersPage /> },
 
             // Beállítások + Admin aloldalak
             { path: 'settings', element: <SettingsPage /> },

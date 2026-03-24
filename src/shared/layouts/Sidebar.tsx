@@ -9,6 +9,7 @@ import {
     Wrench,
     CalendarDays,
     AlertTriangle,
+    Bell,
     Settings,
     X,
     Download,
@@ -31,6 +32,7 @@ const navItems = [
     { to: '/calendar', icon: CalendarDays, labelKey: 'nav.calendar' },
     { to: '/incidents', icon: AlertTriangle, labelKey: 'nav.incidents' },
     { to: '/water-facilities', icon: Droplets, labelKey: 'nav.water_facilities' },
+    { to: '/reminders', icon: Bell, labelKey: 'nav.reminders' },
 ]
 
 const bottomNavItems = [

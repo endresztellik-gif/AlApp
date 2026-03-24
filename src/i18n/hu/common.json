@@ -18,6 +18,7 @@
         "admin_users": "Felhasználók",
         "admin_field_schemas": "Mezőséma",
         "admin_feature_flags": "Modulok",
+        "reminders": "Emlékeztetők",
         "logout": "Kijelentkezés"
     },
     "auth": {

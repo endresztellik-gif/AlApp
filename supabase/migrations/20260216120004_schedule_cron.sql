@@ -18,7 +18,9 @@ create or replace function invoke_check_expirations() -- Replace with your actua
 returns void as $$
 declare
   project_url text := 'https://mgducjqbzqcmrzcsklmn.supabase.co/functions/v1/check-expirations';
-  service_key text := 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZHVjanFienFjbXJ6Y3NrbGxtbiIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3NzA4MDMzODcsImV4cCI6MjA4NjM3OTM4N30.2wxdKboXvYrWllouoGuBB3Ukt7ZeayTFAMGT67IKnHg';
+  -- SECURITY: Never store service_role keys in migration files.
+  -- Set this via Supabase Vault or configure the cron job through the Supabase Dashboard UI.
+  service_key text := current_setting('app.service_role_key', true);
 begin
   -- Best practice: Use Vault or just rely on the fact that this SQL is internal.
   -- For this setup, we'll ask the user to configure the cron via Dashboard or we use a simplified placeholder.
@@ -41,3 +43,29 @@ $$ language plpgsql;
 --   '0 7 * * *', -- 7:00 UTC
 --   $$ select invoke_check_expirations() $$
 -- );
+
+-- ─────────────────────────────────────────────────────────────
+-- Személyes emlékeztető értesítések küldése (15 percenként)
+-- ─────────────────────────────────────────────────────────────
+
+create or replace function invoke_send_reminders()
+returns void as $$
+declare
+  project_url text := 'https://mgducjqbzqcmrzcsklmn.supabase.co/functions/v1/send-reminders';
+  service_key text := current_setting('app.service_role_key', true);
+begin
+  perform net.http_post(
+    url := project_url,
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || service_key
+    )
+  );
+end;
+$$ language plpgsql;
+
+select cron.schedule(
+  'send-reminders-check',
+  '*/15 * * * *',
+  $$ select invoke_send_reminders() $$
+);

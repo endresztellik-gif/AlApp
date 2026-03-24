@@ -5,7 +5,7 @@ import {
     Users,
     Car,
     Wrench,
-    AlertTriangle,
+    Bell,
     Settings
 } from 'lucide-react'
 
@@ -14,7 +14,7 @@ const items = [
     { to: '/personnel', icon: Users, label: 'Személyek' },
     { to: '/vehicles', icon: Car, label: 'Járművek' },
     { to: '/equipment', icon: Wrench, label: 'Eszközök' },
-    { to: '/incidents', icon: AlertTriangle, label: 'Kár' },
+    { to: '/reminders', icon: Bell, label: 'Emlékeztetők' },
     { to: '/settings', icon: Settings, label: 'Beállítások' },
 ]
 
