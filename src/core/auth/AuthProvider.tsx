@@ -29,7 +29,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
+    // Szinkron inicializálás az URL hash-ből — race condition megelőzése
+    const [isRecoveringPassword, setIsRecoveringPassword] = useState(() =>
+        window.location.hash.includes('type=recovery')
+    );
 
     // Profil lekérdezése a user_profiles táblából
     const fetchProfile = useCallback(async (userId: string) => {

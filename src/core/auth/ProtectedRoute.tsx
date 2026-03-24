@@ -25,7 +25,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
     // Password recovery flow (reset password link clicked)
     if (isRecoveringPassword && location.pathname !== '/auth/setup-password') {
-        return <Navigate to="/auth/setup-password" replace />;
+        return <Navigate to={`/auth/setup-password${window.location.hash}`} replace />;
     }
 
     // Check if user is invited and hasn't set password yet
