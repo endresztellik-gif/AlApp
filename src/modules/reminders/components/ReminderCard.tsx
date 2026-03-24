@@ -47,8 +47,11 @@ export function ReminderCard({ reminder, onToggleDone, onDelete }: Props) {
             <div className="flex items-start justify-between gap-2">
                 {/* Kész checkbox */}
                 <button
+                    data-testid="reminder-toggle-btn"
+                    data-done={reminder.is_done}
                     onClick={() => onToggleDone(reminder.id, !reminder.is_done)}
                     className="mt-0.5 flex-shrink-0 text-gray-400 hover:text-green-500 transition-colors"
+                    aria-label={reminder.is_done ? 'Visszaállítás' : 'Kész jelölés'}
                 >
                     {reminder.is_done ? (
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
@@ -59,7 +62,10 @@ export function ReminderCard({ reminder, onToggleDone, onDelete }: Props) {
 
                 {/* Tartalom */}
                 <div className="flex-1 min-w-0">
-                    <p className={`text-[14px] font-semibold leading-snug ${reminder.is_done ? 'line-through text-gray-400' : 'text-text-primary'}`}>
+                    <p
+                        data-testid="reminder-title"
+                        className={`text-[14px] font-semibold leading-snug ${reminder.is_done ? 'line-through text-gray-400' : 'text-text-primary'}`}
+                    >
                         {reminder.title}
                     </p>
                     {reminder.description && (
@@ -71,8 +77,10 @@ export function ReminderCard({ reminder, onToggleDone, onDelete }: Props) {
 
                 {/* Törlés */}
                 <button
+                    data-testid="reminder-delete-btn"
                     onClick={() => onDelete(reminder.id)}
                     className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors"
+                    aria-label="Emlékeztető törlése"
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>
