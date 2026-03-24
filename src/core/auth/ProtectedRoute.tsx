@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-    const { isAuthenticated, isLoading, user } = useAuth();
+    const { isAuthenticated, isLoading, user, isRecoveringPassword } = useAuth();
     const location = useLocation();
 
     if (isLoading) {
@@ -21,6 +21,11 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     if (!isAuthenticated) {
         // Redirect to login page, but save the intended location
         return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    // Password recovery flow (reset password link clicked)
+    if (isRecoveringPassword && location.pathname !== '/auth/setup-password') {
+        return <Navigate to="/auth/setup-password" replace />;
     }
 
     // Check if user is invited and hasn't set password yet

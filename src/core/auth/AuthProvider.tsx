@@ -10,6 +10,7 @@ export interface AuthContextType {
     session: Session | null;
     isLoading: boolean;
     isAuthenticated: boolean;
+    isRecoveringPassword: boolean;
     signIn: (email: string, password: string) => Promise<void>;
     signInWithMagicLink: (email: string) => Promise<void>;
     signOut: () => Promise<void>;
@@ -28,6 +29,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [session, setSession] = useState<Session | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isRecoveringPassword, setIsRecoveringPassword] = useState(false);
 
     // Profil lekérdezése a user_profiles táblából
     const fetchProfile = useCallback(async (userId: string) => {
@@ -68,8 +70,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 setSession(null);
                 setUser(null);
                 setProfile(null);
+                setIsRecoveringPassword(false);
                 setIsLoading(false);
                 return;
+            }
+
+            if (event === 'PASSWORD_RECOVERY') {
+                setIsRecoveringPassword(true);
+            }
+
+            if (event === 'USER_UPDATED') {
+                setIsRecoveringPassword(false);
             }
 
             setSession(session);
@@ -133,7 +144,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }, []);
 
     const resetPassword = useCallback(async (email: string) => {
-        const { error } = await supabase.auth.resetPasswordForEmail(email);
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}/auth/setup-password`,
+        });
         if (error) throw new Error(error.message);
     }, []);
 
@@ -151,6 +164,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
                 session,
                 isLoading,
                 isAuthenticated: !!session,
+                isRecoveringPassword,
                 signIn,
                 signInWithMagicLink,
                 signOut,
