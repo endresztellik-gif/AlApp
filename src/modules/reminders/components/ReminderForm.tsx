@@ -102,6 +102,7 @@ export function ReminderForm({ onSave, onClose }: Props) {
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="pl. Autó szerviz időpont"
+                                data-testid="reminder-title-input"
                                 className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
                                 autoFocus
                             />
@@ -192,6 +193,7 @@ export function ReminderForm({ onSave, onClose }: Props) {
                             <button
                                 type="submit"
                                 disabled={saving}
+                                data-testid="reminder-save-btn"
                                 className="flex-1 py-2.5 rounded-xl text-white text-[13.5px] font-semibold transition-all disabled:opacity-60"
                                 style={{ background: 'linear-gradient(135deg, #4F8EF7, #6FA8FF)', boxShadow: '0 3px 10px -2px rgba(79,142,247,0.4)' }}
                             >

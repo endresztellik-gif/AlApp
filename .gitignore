@@ -33,3 +33,6 @@ supabase/.temp
 
 # Mock adatok (lokális fejlesztéshez)
 mock-drive/
+
+# Local Netlify folder
+.netlify

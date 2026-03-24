@@ -7,11 +7,15 @@ export const TEST_PASSWORD  = process.env.SUPABASE_TEST_USER_PASSWORD ?? '';
 
 export async function login(page: Page, email: string, password: string) {
     await page.goto('/login');
-    await page.fill('input[type="email"]', email);
-    await page.fill('input[type="password"]', password);
-    await page.click('button[type="submit"]');
-    // Várjuk, hogy az URL ne /login legyen (sikeres login)
-    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 10_000 });
+    // Az input ID-k alapján szelektálunk (megbízhatóbb React + Framer Motion esetén)
+    await page.waitForSelector('#email', { state: 'visible', timeout: 8_000 });
+    await page.locator('#email').fill(email);
+    await page.waitForSelector('#password', { state: 'visible', timeout: 8_000 });
+    await page.locator('#password').fill(password);
+    // Explicit ellenőrzés hogy a value valóban bekerült
+    await page.locator('#email').evaluate((el: HTMLInputElement) => el.value);
+    await page.locator('button[type="submit"]').click();
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 12_000 });
 }
 
 export async function logout(page: Page) {

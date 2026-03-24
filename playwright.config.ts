@@ -1,9 +1,12 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// .env és .env.local betöltése
-dotenv.config({ path: path.resolve(__dirname, '.env.local') });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// .env és .env.local betöltése – override: true hogy a shell env ne írja felül
+dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: true });
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
 export default defineConfig({
