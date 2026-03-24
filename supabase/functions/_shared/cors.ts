@@ -2,6 +2,7 @@ const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:4173',
     'https://mgducjqbzqcmrzcsklmn.supabase.co',
+    'https://dunaialapp.netlify.app',
 ]
 
 export function getCorsHeaders(req?: Request): Record<string, string> {
