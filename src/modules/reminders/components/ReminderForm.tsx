@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, Bell } from 'lucide-react';
-import type { NewReminder } from '../hooks/useReminders';
+import type { NewReminder, Reminder } from '../hooks/useReminders';
 
 const PRESET_MINUTES = [
     { label: 'Pontosan', value: 0 },
@@ -16,14 +16,18 @@ const PRESET_MINUTES = [
 interface Props {
     onSave: (data: NewReminder) => Promise<void>;
     onClose: () => void;
+    initialData?: Reminder;
 }
 
-export function ReminderForm({ onSave, onClose }: Props) {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [dueDate, setDueDate] = useState('');
-    const [dueTime, setDueTime] = useState('08:00');
-    const [selectedMinutes, setSelectedMinutes] = useState<number[]>([1440]);
+export function ReminderForm({ onSave, onClose, initialData }: Props) {
+    const isEdit = !!initialData;
+    const [title, setTitle] = useState(initialData?.title ?? '');
+    const [description, setDescription] = useState(initialData?.description ?? '');
+    const [dueDate, setDueDate] = useState(initialData ? initialData.due_at.split('T')[0] : '');
+    const [dueTime, setDueTime] = useState(initialData ? initialData.due_at.split('T')[1]?.slice(0, 5) : '08:00');
+    const [selectedMinutes, setSelectedMinutes] = useState<number[]>(
+        initialData ? initialData.notifications.filter(n => !n.sent_at).map(n => n.notify_before_minutes) : [1440]
+    );
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
@@ -84,7 +88,7 @@ export function ReminderForm({ onSave, onClose }: Props) {
                                 style={{ background: 'linear-gradient(135deg, #4F8EF7, #6FA8FF)', boxShadow: '0 3px 8px -2px rgba(79,142,247,0.4)' }}>
                                 <Bell className="w-4 h-4 text-white" />
                             </div>
-                            <h2 className="text-[16px] font-bold text-text-primary">Új emlékeztető</h2>
+                            <h2 className="text-[16px] font-bold text-text-primary">{isEdit ? 'Emlékeztető szerkesztése' : 'Új emlékeztető'}</h2>
                         </div>
                         <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                             <X className="w-4 h-4 text-gray-500" />
@@ -132,7 +136,7 @@ export function ReminderForm({ onSave, onClose }: Props) {
                                     type="date"
                                     value={dueDate}
                                     onChange={(e) => setDueDate(e.target.value)}
-                                    min={new Date().toISOString().split('T')[0]}
+                                    min={isEdit ? undefined : new Date().toISOString().split('T')[0]}
                                     className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-[14px] focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition"
                                 />
                             </div>
@@ -197,7 +201,7 @@ export function ReminderForm({ onSave, onClose }: Props) {
                                 className="flex-1 py-2.5 rounded-xl text-white text-[13.5px] font-semibold transition-all disabled:opacity-60"
                                 style={{ background: 'linear-gradient(135deg, #4F8EF7, #6FA8FF)', boxShadow: '0 3px 10px -2px rgba(79,142,247,0.4)' }}
                             >
-                                {saving ? 'Mentés…' : 'Mentés'}
+                                {saving ? 'Mentés…' : isEdit ? 'Módosítás mentése' : 'Mentés'}
                             </button>
                         </div>
                     </form>

@@ -1,6 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { MainLayout } from '@/shared/layouts/MainLayout';
-import { ProtectedRoute } from '@/core/auth/ProtectedRoute';
+import { ProtectedRoute, AdminRoute } from '@/core/auth/ProtectedRoute';
 import { DashboardPage } from '@/modules/dashboard/pages/DashboardPage';
 import { PersonnelListPage } from '@/modules/personnel/pages/PersonnelListPage';
 import { PersonnelDetailPage } from '@/modules/personnel/pages/PersonnelDetailPage';
@@ -63,12 +63,12 @@ export const router = createBrowserRouter([
             // Személyes emlékeztetők (csak a tulajdonos látja)
             { path: 'reminders', element: <RemindersPage /> },
 
-            // Beállítások + Admin aloldalak
-            { path: 'settings', element: <SettingsPage /> },
-            { path: 'settings/users', element: <UsersPage /> },
-            { path: 'settings/field-schemas', element: <FieldSchemasPage /> },
-            { path: 'settings/feature-flags', element: <FeatureFlagsPage /> },
-            { path: 'settings/audit-log', element: <AuditLogPage /> },
+            // Beállítások + Admin aloldalak (csak admin)
+            { path: 'settings', element: <AdminRoute><SettingsPage /></AdminRoute> },
+            { path: 'settings/users', element: <AdminRoute><UsersPage /></AdminRoute> },
+            { path: 'settings/field-schemas', element: <AdminRoute><FieldSchemasPage /></AdminRoute> },
+            { path: 'settings/feature-flags', element: <AdminRoute><FeatureFlagsPage /></AdminRoute> },
+            { path: 'settings/audit-log', element: <AdminRoute><AuditLogPage /></AdminRoute> },
 
             { path: '*', element: <Navigate to="/" replace /> },
         ],

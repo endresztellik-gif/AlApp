@@ -231,7 +231,7 @@ SUPABASE_ACCESS_TOKEN=sbp_f0bfa57b8365a3dff0b8dbe54bd06e82d6f88bf2 npx supabase 
 ```bash
 # GET JWT token-ből a user-t
 curl -i "https://mgducjqbzqcmrzcsklmn.supabase.co/functions/v1/invite-user" \
-  -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZHVjanFienFjbXJ6Y3NrbG1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4MDMzODcsImV4cCI6MjA4NjM3OTM4N30.B39iD_tUOCux_U9niSnVnnfXQfIsqru_-d-Z6QkWUU0" \
+  -H "apikey: YOUR_SUPABASE_ANON_KEY" \
   -H "Authorization: Bearer <JWT_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","fullName":"Test User","role":"user"}'
@@ -393,3 +393,159 @@ git push
 **Utolsó frissítés:** 2026-02-23 10:15 (Europe/Budapest)
 **Státusz:** Visszaállítva az eredeti `inviteUserByEmail` megközelítésre, SMTP beállítás szükséges
 **Következő:** Állítsd be a Gmail SMTP-t a Dashboard-on (lásd `GMAIL_SMTP_SETUP.md`)!
+
+---
+
+---
+
+# Fejlesztési Napló — 2026-03-24
+
+## 1. Netlify Build Hiba Javítása
+
+**Probléma:** A Netlify build 2026-03-23 óta folyamatosan elhalt egy TypeScript hibán (`TS2769`), így a reminders modul sosem jutott ki production-be.
+
+**Fájl:** `src/modules/reminders/components/PushSubscriptionManager.tsx`
+
+**Ok:** `urlBase64ToUint8Array()` visszatérési típusa `Uint8Array<ArrayBufferLike>`, ami nem assignable a `BufferSource`-hoz a TypeScript strict módban.
+
+**Megoldás:** Az `applicationServerKey` paraméternek közvetlenül a VAPID string-et adjuk át — a böngésző natively kezeli a base64url kulcsot:
+```typescript
+applicationServerKey: VAPID_PUBLIC_KEY,  // string, nem Uint8Array
+```
+
+---
+
+## 2. Password Recovery Race Condition Fix (3. kísérlet)
+
+**Probléma:** Password recovery link kattintás után a rendszer jelszóbeállítás nélkül beengedte a usert.
+
+**Ok:** A Supabase SDK a `createClient()` hívás során aszinkron módon dolgozza fel az URL hash-t (`#type=recovery&...`), de addigra React már mountolt és az `onAuthStateChange` listener még nem volt regisztrálva.
+
+**Megoldás:** A recovery szándékot a `supabase.ts` modul szintjén, a `createClient()` hívás **előtt** mentjük `sessionStorage`-ba:
+
+```typescript
+// src/lib/supabase.ts — modul szinten fut, React előtt
+if (typeof window !== 'undefined' && window.location.hash.includes('type=recovery')) {
+    sessionStorage.setItem('recovery_pending', '1')
+}
+export const supabase = createClient(...)
+```
+
+```typescript
+// src/core/auth/AuthProvider.tsx — szinkron useState init
+const [isRecoveringPassword, setIsRecoveringPassword] = useState(() => {
+    const pending = sessionStorage.getItem('recovery_pending') === '1';
+    if (pending) sessionStorage.removeItem('recovery_pending');
+    return pending;
+});
+```
+
+```typescript
+// src/core/auth/ProtectedRoute.tsx — hash megőrzése redirect közben
+if (isRecoveringPassword && location.pathname !== '/auth/setup-password') {
+    return <Navigate to={`/auth/setup-password${window.location.hash}`} replace />;
+}
+```
+
+---
+
+## 3. Személyes Emlékeztetők — Szerkesztési Funkció
+
+**Döntés:** Option B — szerkesztéskor csak a **jövőbeli, még nem kiküldött** értesítések frissülnek. Már kiküldött (`sent_at IS NOT NULL`) értesítéseket nem módosítunk.
+
+**Módosított fájlok:**
+
+- `src/modules/reminders/hooks/useReminders.ts` — `UpdateReminder` interface + `updateMutation`:
+  - `personal_reminders` tábla frissítése (title, description, due_at)
+  - Nem kiküldött `personal_reminder_notifications` törlése (`sent_at IS NULL`)
+  - Új értesítések beszúrása
+
+- `src/modules/reminders/components/ReminderCard.tsx` — Pencil ikon + `onEdit` callback
+
+- `src/modules/reminders/components/ReminderForm.tsx` — Edit mód:
+  - `initialData?: Reminder` prop
+  - Mezők előtöltése meglévő adatokból
+  - Min. dátum korlát eltávolítva szerkesztés módban
+  - Submit gomb szövege: „Módosítás mentése"
+
+- `src/modules/reminders/pages/RemindersPage.tsx` — `editingReminder` state + edit form modal
+
+---
+
+## 4. Email Sablon Frissítése
+
+**Fájl:** `supabase/functions/send-reminders/index.ts` (v6, MCP-n keresztül deploy-olva)
+
+**Új sablon:**
+```
+Szia!
+
+Ez egy automatikus emlékeztető, amit "[cím]" tárgyban állítottál be [dátum]-ra.
+
+[Megjegyzés: leírás (ha van)]
+
+Értesítési beállítás: [mikor]
+
+A személyes emlékeztetőidet az AlApp /reminders oldalán kezelheted.
+```
+
+---
+
+## 5. E2E Privacy Teszt Feloldása
+
+**Fájl:** `e2e/smoke/reminders.spec.ts`
+
+`test.skip` → `test` a privacy teszten, miután a 2. teszt felhasználó (`sztellikddnp@gmail.com`) elérhető lett.
+
+A teszt ellenőrzi: admin emlékeztetője nem látható más user számára (RLS owner-only policy).
+
+---
+
+## 6. Admin Route Guard (Felhasználókezelés hozzáférés)
+
+**Döntés:** Teljes route guard + nav elrejtés, nem csak a gomb letiltása.
+
+**Indoklás:** A „csak gombot tiltjuk" megközelítés adatexponálást hagy maga után (user_profiles SELECT nem-adminoknak). Az `usePermissions.ts`-ben már definiált `canManageUsers: role === 'admin'` nem volt alkalmazva — ez volt a gap.
+
+**Módosított fájlok:**
+
+- `src/core/auth/ProtectedRoute.tsx` — `AdminRoute` komponens hozzáadva:
+  ```typescript
+  export function AdminRoute({ children }) {
+      if (profile?.role !== 'admin') return <Navigate to="/" replace />;
+      return <>{children}</>;
+  }
+  ```
+
+- `src/app/routes.tsx` — Minden `settings/*` route `<AdminRoute>` -ba csomagolva
+
+- `src/shared/layouts/Sidebar.tsx` — Settings nav item csak `canManageUsers === true` esetén jelenik meg
+
+- `src/shared/layouts/BottomNav.tsx` — Settings item dinamikusan, csak adminoknak
+
+**Eredmény:**
+- Nem-admin user: nem látja a Settings menüpontot, direkt URL-lel sem éri el (`/` -re kerül)
+- Admin user: minden változatlan
+
+---
+
+## 7. Biztonsági Scan (2026-03-24)
+
+**Eszközök:** Snyk Code (SAST) + Snyk SCA + Semgrep
+
+| Tool | Eredmény |
+|------|----------|
+| Snyk Code | ✅ 0 találat |
+| Semgrep | ✅ 0 találat |
+| Snyk SCA | ⚠️ 2 ismert hiba (xlsx@0.18.5) |
+
+**Elfogadott kivételek (xlsx@0.18.5, nincs elérhető fix):**
+- `SNYK-JS-XLSX-5457926` — Prototype Pollution (medium, CVE-2023-30533)
+- `SNYK-JS-XLSX-6252523` — ReDoS (high, CVE-2024-22363)
+
+Korábban már dokumentálva: `memory/project_security_audit.md`
+
+---
+
+**Utolsó frissítés:** 2026-03-24
+**Commit-ok:** Egyetlen batch commit a fenti összes változtatással

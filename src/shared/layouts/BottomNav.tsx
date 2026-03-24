@@ -8,18 +8,22 @@ import {
     Bell,
     Settings
 } from 'lucide-react'
+import { usePermissions } from '@/core/permissions/usePermissions'
 
-const items = [
+const baseItems = [
     { to: '/', icon: LayoutDashboard, label: 'Áttekintő' },
     { to: '/personnel', icon: Users, label: 'Személyek' },
     { to: '/vehicles', icon: Car, label: 'Járművek' },
     { to: '/equipment', icon: Wrench, label: 'Eszközök' },
     { to: '/reminders', icon: Bell, label: 'Emlékeztetők' },
-    { to: '/settings', icon: Settings, label: 'Beállítások' },
 ]
+
+const adminItem = { to: '/settings', icon: Settings, label: 'Beállítások' }
 
 export function BottomNav() {
     const location = useLocation()
+    const { canManageUsers } = usePermissions()
+    const items = canManageUsers ? [...baseItems, adminItem] : baseItems
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-30 glass-strong border-t border-white/40 safe-area-bottom">

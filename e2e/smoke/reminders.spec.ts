@@ -91,7 +91,7 @@ test.describe('Reminders modul', () => {
         ).not.toBeVisible({ timeout: 5_000 });
     });
 
-    test.skip('privacy: admin emlékeztetőjét test user NEM látja', async ({ page }) => {
+    test('privacy: admin emlékeztetőjét test user NEM látja', async ({ page }) => {
         // 1. Admin létrehoz emlékeztetőt
         await login(page, ADMIN_EMAIL, ADMIN_PASSWORD);
         await page.goto('/reminders');

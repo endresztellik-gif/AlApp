@@ -251,14 +251,13 @@ serve(async (req) => {
                         from: `AlApp Emlékeztető <${smtpUser}>`,
                         to: profile.email,
                         subject: notifTitle,
-                        content: `Kedves ${profile.full_name || profile.email}!
+                        content: `Szia!
 
-${notifBody}
+Ez egy automatikus emlékeztető, amit "${reminder.title}" tárgyban állítottál be ${dueDateStr}-ra.${reminder.description ? `\n\nMegjegyzés: ${reminder.description}` : ''}
 
 Értesítési beállítás: ${when}
 
-Ez egy automatikus emlékeztető az AlApp rendszerből.
-A személyes emlékeztetőidet a /reminders oldalon kezelheted.
+A személyes emlékeztetőidet az AlApp /reminders oldalán kezelheted.
 
 Üdvözlettel,
 AlApp Rendszer`.trim(),

@@ -30,6 +30,14 @@ export interface NewReminder {
     notify_before_minutes: number[];  // pl. [2880, 1440, 480]
 }
 
+export interface UpdateReminder {
+    id: string;
+    title: string;
+    description?: string;
+    due_at: string;
+    notify_before_minutes: number[];
+}
+
 export function useReminders() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
@@ -101,6 +109,47 @@ export function useReminders() {
         },
     });
 
+    const updateMutation = useMutation({
+        mutationFn: async (input: UpdateReminder) => {
+            // 1. Alap mezők frissítése
+            const { error: rErr } = await supabase
+                .from('personal_reminders')
+                .update({
+                    title: input.title,
+                    description: input.description ?? null,
+                    due_at: input.due_at,
+                })
+                .eq('id', input.id);
+
+            if (rErr) throw rErr;
+
+            // 2. Még el nem küldött értesítések törlése (B opció)
+            const { error: dErr } = await supabase
+                .from('personal_reminder_notifications')
+                .delete()
+                .eq('reminder_id', input.id)
+                .is('sent_at', null);
+
+            if (dErr) throw dErr;
+
+            // 3. Új értesítések létrehozása
+            if (input.notify_before_minutes.length > 0) {
+                const notifs = input.notify_before_minutes.map((mins) => ({
+                    reminder_id: input.id,
+                    user_id: user!.id,
+                    notify_before_minutes: mins,
+                }));
+                const { error: nErr } = await supabase
+                    .from('personal_reminder_notifications')
+                    .insert(notifs);
+                if (nErr) throw nErr;
+            }
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['reminders'] });
+        },
+    });
+
     const deleteMutation = useMutation({
         mutationFn: async (id: string) => {
             const { error } = await supabase
@@ -127,6 +176,7 @@ export function useReminders() {
         isLoading,
         error,
         create: createMutation.mutateAsync,
+        update: updateMutation.mutateAsync,
         toggleDone: toggleDoneMutation.mutateAsync,
         remove: deleteMutation.mutateAsync,
     };

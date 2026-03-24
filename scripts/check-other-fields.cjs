@@ -7,8 +7,8 @@ const supabase = createClient(process.env.VITE_SUPABASE_URL, process.env.VITE_SU
 async function run() {
     console.log('Logging in...');
     await supabase.auth.signInWithPassword({
-        email: 'admin@admin.hu',
-        password: 'admin1234'
+        email: process.env.SUPABASE_ADMIN_EMAIL,
+        password: process.env.SUPABASE_ADMIN_PASSWORD
     });
 
     console.log('Fetching "Egyéb" type ID...');

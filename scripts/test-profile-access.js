@@ -21,10 +21,10 @@ async function testProfileAccess() {
     console.log('Testing Profile Access...');
     try {
         // 1. Login
-        console.log('Logging in as admin@admin.hu...');
+        console.log('Logging in as admin...');
         const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-            email: 'admin@admin.hu',
-            password: 'admin1234',
+            email: process.env.SUPABASE_ADMIN_EMAIL,
+            password: process.env.SUPABASE_ADMIN_PASSWORD,
         });
 
         if (authError) {

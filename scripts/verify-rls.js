@@ -38,8 +38,8 @@ async function verifyRLS() {
 
     // 1. Sign in
     const { data: { session }, error: loginError } = await supabase.auth.signInWithPassword({
-        email: 'test@example.com',
-        password: 'password123'
+        email: envConfig.SUPABASE_ADMIN_EMAIL,
+        password: envConfig.SUPABASE_ADMIN_PASSWORD
     });
 
     if (loginError) {

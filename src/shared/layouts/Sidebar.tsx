@@ -17,6 +17,7 @@ import {
     LogOut
 } from 'lucide-react'
 import { useAuth } from '@/core/auth/useAuth'
+import { usePermissions } from '@/core/permissions/usePermissions'
 import { ExportModal } from '@/modules/export/components/ExportModal'
 
 interface SidebarProps {
@@ -42,6 +43,7 @@ const bottomNavItems = [
 export function Sidebar({ mobile, onClose }: SidebarProps) {
     const { t } = useTranslation()
     const { user, profile, signOut } = useAuth()
+    const { canManageUsers } = usePermissions()
     const [isExportModalOpen, setIsExportModalOpen] = useState(false)
 
     const handleLogout = async () => {
@@ -170,7 +172,7 @@ export function Sidebar({ mobile, onClose }: SidebarProps) {
                 {/* Divider */}
                 <div className="mx-1 mb-3 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
-                {bottomNavItems.map((item) => (
+                {canManageUsers && bottomNavItems.map((item) => (
                     <NavLink
                         key={item.to}
                         to={item.to}

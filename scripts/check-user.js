@@ -31,7 +31,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 });
 
 async function checkUser() {
-    const email = 'admin@admin.hu';
+    const email = process.env.SUPABASE_ADMIN_EMAIL;
 
     console.log(`Checking for user: ${email}...`);
 

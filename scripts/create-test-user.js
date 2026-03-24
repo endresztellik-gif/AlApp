@@ -20,8 +20,13 @@ if (!supabaseUrl || !serviceRoleKey) {
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
 async function createTestUser() {
-    const email = 'test_frontend@test.com';
-    const password = 'password123';
+    const email = envConfig.SUPABASE_TEST_USER_EMAIL;
+    const password = envConfig.SUPABASE_TEST_USER_PASSWORD;
+
+    if (!email || !password) {
+        console.error('Missing SUPABASE_TEST_USER_EMAIL or SUPABASE_TEST_USER_PASSWORD in .env');
+        process.exit(1);
+    }
 
     console.log(`Creating user: ${email}...`);
 

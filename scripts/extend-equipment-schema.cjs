@@ -12,8 +12,8 @@ if (!supabaseUrl || !supabaseKey) {
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-const ADMIN_EMAIL = 'admin@admin.hu';
-const ADMIN_PASSWORD = 'admin1234';
+const ADMIN_EMAIL = process.env.SUPABASE_ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.SUPABASE_ADMIN_PASSWORD;
 
 const NEW_TYPES = [
     { name: 'Láncfűrész', module: 'equipment' },

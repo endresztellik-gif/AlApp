@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Plus, CheckCheck, AlertCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useReminders } from '../hooks/useReminders';
+import type { Reminder } from '../hooks/useReminders';
 import { ReminderCard } from '../components/ReminderCard';
 import { ReminderForm } from '../components/ReminderForm';
 import { PushSubscriptionManager } from '../components/PushSubscriptionManager';
@@ -39,8 +40,9 @@ function SectionHeader({ icon: Icon, label, count, color }: {
 }
 
 export function RemindersPage() {
-    const { upcoming, overdue, done, isLoading, create, toggleDone, remove } = useReminders();
+    const { upcoming, overdue, done, isLoading, create, update, toggleDone, remove } = useReminders();
     const [isFormOpen, setIsFormOpen] = useState(false);
+    const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
     const [showDone, setShowDone] = useState(false);
 
     const handleToggleDone = async (id: string, is_done: boolean) => {
@@ -133,6 +135,7 @@ export function RemindersPage() {
                                         reminder={r}
                                         onToggleDone={handleToggleDone}
                                         onDelete={handleDelete}
+                                        onEdit={setEditingReminder}
                                     />
                                 ))}
                             </div>
@@ -160,6 +163,7 @@ export function RemindersPage() {
                                         reminder={r}
                                         onToggleDone={handleToggleDone}
                                         onDelete={handleDelete}
+                                        onEdit={setEditingReminder}
                                     />
                                 ))}
                             </div>
@@ -218,6 +222,7 @@ export function RemindersPage() {
                                                 reminder={r}
                                                 onToggleDone={handleToggleDone}
                                                 onDelete={handleDelete}
+                                                onEdit={setEditingReminder}
                                             />
                                         ))}
                                     </motion.div>
@@ -228,7 +233,7 @@ export function RemindersPage() {
                 </AnimatePresence>
             )}
 
-            {/* Form modal */}
+            {/* Létrehozó form */}
             {isFormOpen && (
                 <ReminderForm
                     onSave={async (data) => {
@@ -236,6 +241,18 @@ export function RemindersPage() {
                         toast.success('Emlékeztető létrehozva!');
                     }}
                     onClose={() => setIsFormOpen(false)}
+                />
+            )}
+
+            {/* Szerkesztő form */}
+            {editingReminder && (
+                <ReminderForm
+                    initialData={editingReminder}
+                    onSave={async (data) => {
+                        await update({ id: editingReminder.id, ...data });
+                        toast.success('Emlékeztető frissítve!');
+                    }}
+                    onClose={() => setEditingReminder(null)}
                 />
             )}
         </div>

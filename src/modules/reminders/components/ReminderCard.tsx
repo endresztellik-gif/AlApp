@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Trash2, Clock, CheckCircle2, Circle, Bell } from 'lucide-react';
+import { Trash2, Pencil, Clock, CheckCircle2, Circle, Bell } from 'lucide-react';
 import { formatDistanceToNow, isPast, format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import type { Reminder } from '../hooks/useReminders';
@@ -23,9 +23,10 @@ interface Props {
     reminder: Reminder;
     onToggleDone: (id: string, is_done: boolean) => void;
     onDelete: (id: string) => void;
+    onEdit: (reminder: Reminder) => void;
 }
 
-export function ReminderCard({ reminder, onToggleDone, onDelete }: Props) {
+export function ReminderCard({ reminder, onToggleDone, onDelete, onEdit }: Props) {
     const due = new Date(reminder.due_at);
     const overdue = isPast(due) && !reminder.is_done;
 
@@ -75,15 +76,24 @@ export function ReminderCard({ reminder, onToggleDone, onDelete }: Props) {
                     )}
                 </div>
 
-                {/* Törlés */}
-                <button
-                    data-testid="reminder-delete-btn"
-                    onClick={() => onDelete(reminder.id)}
-                    className="flex-shrink-0 text-gray-300 hover:text-red-400 transition-colors"
-                    aria-label="Emlékeztető törlése"
-                >
-                    <Trash2 className="w-4 h-4" />
-                </button>
+                {/* Szerkesztés + Törlés */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                        onClick={() => onEdit(reminder)}
+                        className="text-gray-300 hover:text-blue-400 transition-colors"
+                        aria-label="Emlékeztető szerkesztése"
+                    >
+                        <Pencil className="w-4 h-4" />
+                    </button>
+                    <button
+                        data-testid="reminder-delete-btn"
+                        onClick={() => onDelete(reminder.id)}
+                        className="text-gray-300 hover:text-red-400 transition-colors"
+                        aria-label="Emlékeztető törlése"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
             </div>
 
             {/* Határidő */}

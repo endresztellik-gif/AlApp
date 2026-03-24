@@ -20,7 +20,7 @@ const supabase = createClient(supabaseUrl, serviceKey, {
 
 async function resetPassword() {
     const email = 'admin@alapp.test'; // Using the admin user
-    const newPassword = 'password123';
+    const newPassword = process.env.SUPABASE_NEW_PASSWORD;
 
     console.log(`🔄 Attempting to reset password for: ${email}`);
     console.log(`📡 URL: ${supabaseUrl}`);

@@ -25,8 +25,8 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 });
 
 async function resetPassword() {
-    const email = 'admin@admin.hu';
-    const newPassword = 'admin1234';
+    const email = envConfig.SUPABASE_ADMIN_EMAIL;
+    const newPassword = envConfig.SUPABASE_NEW_PASSWORD;
 
     console.log(`Resetting password for: ${email}...`);
 
