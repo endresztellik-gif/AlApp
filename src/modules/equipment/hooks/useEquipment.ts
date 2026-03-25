@@ -68,7 +68,7 @@ export function useEquipment() {
                 .insert({
                     entity_type_id: newEquipment.entity_type_id,
                     display_name: newEquipment.display_name,
-                    responsible_user_id: newEquipment.responsible_user_id,
+                    responsible_user_id: newEquipment.responsible_user_id || null,
                     is_active: newEquipment.is_active,
                     field_values: newEquipment.field_values // JSONB direct insert
                 })

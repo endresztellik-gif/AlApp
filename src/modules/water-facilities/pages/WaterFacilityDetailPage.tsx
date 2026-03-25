@@ -5,10 +5,11 @@ import { useWaterFacility, useWaterFacilities } from '../hooks/useWaterFacilitie
 import { WaterFacilityInput } from '../types';
 import { googleStorage } from '@/core/api/google-services';
 import { WaterFacilityForm } from '../components/WaterFacilityForm';
-import { ArrowLeft, FileText, Image, Edit, Droplets } from 'lucide-react';
+import { ArrowLeft, FileText, Image, Edit, Droplets, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { WaterFacilityDocuments } from '../components/WaterFacilityDocuments';
 import { WaterFacilityImages } from '../components/WaterFacilityImages';
+import { usePermissions } from '@/core/permissions/usePermissions';
 
 type Tab = 'details' | 'documents' | 'images';
 
@@ -16,7 +17,8 @@ export function WaterFacilityDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { facility, isLoading, error } = useWaterFacility(id);
-    const { updateFacility } = useWaterFacilities();
+    const { updateFacility, deleteFacility } = useWaterFacilities();
+    const { canManageUsers } = usePermissions();
     const [activeTab, setActiveTab] = useState<Tab>('details');
     const [isEditOpen, setIsEditOpen] = useState(false);
 
@@ -93,7 +95,7 @@ export function WaterFacilityDetailPage() {
                         </p>
                     </div>
                 </div>
-                <div>
+                <div className="flex items-center gap-2">
                     <button
                         onClick={() => setIsEditOpen(true)}
                         className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
@@ -101,6 +103,24 @@ export function WaterFacilityDetailPage() {
                         <Edit className="w-4 h-4" />
                         Szerkesztés
                     </button>
+                    {canManageUsers && (
+                        <button
+                            onClick={async () => {
+                                if (!id || !window.confirm(`Biztosan törlöd a(z) „${facility.name}" létesítményt? Ez visszafordíthatatlan!`)) return;
+                                try {
+                                    await deleteFacility(id);
+                                    toast.success('Létesítmény törölve');
+                                    navigate('/water-facilities');
+                                } catch {
+                                    toast.error('Hiba a törlés során');
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors shadow-sm"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            Törlés
+                        </button>
+                    )}
                 </div>
             </div>
 

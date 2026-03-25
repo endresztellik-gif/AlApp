@@ -57,6 +57,7 @@ export function usePersonnel() {
             display_name: string;
             field_values: Record<string, unknown>; // field_key -> value
             responsible_user_id?: string;
+            is_active?: boolean;
         }) => {
             // Direct JSONB insert - much simpler!
             const { data, error } = await supabase
@@ -64,7 +65,8 @@ export function usePersonnel() {
                 .insert({
                     entity_type_id: newPerson.entity_type_id,
                     display_name: newPerson.display_name,
-                    responsible_user_id: newPerson.responsible_user_id,
+                    responsible_user_id: newPerson.responsible_user_id || null,
+                    is_active: newPerson.is_active ?? true,
                     field_values: newPerson.field_values // JSONB direct insert
                 })
                 .select()
