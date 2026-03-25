@@ -23,8 +23,13 @@ export function ReminderForm({ onSave, onClose, initialData }: Props) {
     const isEdit = !!initialData;
     const [title, setTitle] = useState(initialData?.title ?? '');
     const [description, setDescription] = useState(initialData?.description ?? '');
-    const [dueDate, setDueDate] = useState(initialData ? initialData.due_at.split('T')[0] : '');
-    const [dueTime, setDueTime] = useState(initialData ? initialData.due_at.split('T')[1]?.slice(0, 5) : '08:00');
+    const localDue = initialData ? new Date(initialData.due_at) : null;
+    const [dueDate, setDueDate] = useState(localDue
+        ? `${localDue.getFullYear()}-${String(localDue.getMonth() + 1).padStart(2, '0')}-${String(localDue.getDate()).padStart(2, '0')}`
+        : '');
+    const [dueTime, setDueTime] = useState(localDue
+        ? `${String(localDue.getHours()).padStart(2, '0')}:${String(localDue.getMinutes()).padStart(2, '0')}`
+        : '08:00');
     const [selectedMinutes, setSelectedMinutes] = useState<number[]>(
         initialData ? initialData.notifications.filter(n => !n.sent_at).map(n => n.notify_before_minutes) : [1440]
     );
@@ -49,7 +54,7 @@ export function ReminderForm({ onSave, onClose, initialData }: Props) {
             await onSave({
                 title: title.trim(),
                 description: description.trim() || undefined,
-                due_at: `${dueDate}T${dueTime}:00`,
+                due_at: new Date(`${dueDate}T${dueTime}:00`).toISOString(),
                 notify_before_minutes: selectedMinutes,
             });
             onClose();
