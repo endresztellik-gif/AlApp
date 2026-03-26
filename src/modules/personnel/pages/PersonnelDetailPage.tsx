@@ -1,12 +1,12 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
-import {
-    ArrowLeft, Edit, Trash2, Shield, FileText, Users
-} from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, Shield, FileText, Users, Link, LinkIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { usePersonnel } from '../hooks/usePersonnel';
-import { useState } from 'react';
+import { usePermissions } from '@/core/permissions/usePermissions';
 import { PersonnelForm } from '../components/PersonnelForm';
 
 /* Avatar szín ugyanaz mint a kártyán */
@@ -16,11 +16,10 @@ function avatarColor(name: string) {
         { from: 'from-secondary-400', to: 'to-secondary-600' },
         { from: 'from-accent-dark', to: 'to-accent-base' },
         { from: 'from-primary-300', to: 'to-primary-500' },
-    ]
-    return palette[name.charCodeAt(0) % palette.length]
+    ];
+    return palette[name.charCodeAt(0) % palette.length];
 }
 
-/* Részlap skeleton */
 function DetailSkeleton() {
     return (
         <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
@@ -30,58 +29,76 @@ function DetailSkeleton() {
                 <div className="md:col-span-2 skeleton h-64 rounded-2xl" />
             </div>
         </div>
-    )
+    );
 }
 
 export function PersonnelDetailPage() {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const { update, remove } = usePersonnel();
+    const { update, remove, linkUser } = usePersonnel();
+    const { canManageUsers } = usePermissions();
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string>('');
+    const [isLinking, setIsLinking] = useState(false);
 
+    // Személy adatainak lekérdezése a personnel táblából
     const { data: person, isLoading, refetch } = useQuery({
         queryKey: ['personnel', id],
         queryFn: async () => {
-            const { data: entity, error } = await supabase
-                .from('entities')
+            const { data, error } = await supabase
+                .from('personnel')
                 .select(`
-    *,
-    entity_type: entity_types(id, name),
-        responsible_user: user_profiles(full_name),
-            photos(*)
+                    *,
+                    entity_type:entity_types(id, name),
+                    responsible_user:user_profiles(full_name)
                 `)
-                .eq('id', id)
+                .eq('id', id!)
                 .single();
-
             if (error) throw error;
-            if (!entity) return null;
-
-            const { data: fieldValues } = await supabase
-                .from('field_values')
-                .select(`
-value_text,
-    value_date,
-    value_json,
-    field_schema: field_schemas(field_key, field_name, field_type)
-                `)
-                .eq('entity_id', id);
-
-            const values: Record<string, unknown> = {};
-            const schemaMap: Record<string, { field_key: string; field_name: string; field_type: string }> = {};
-
-            fieldValues?.forEach(fv => {
-                const val = fv.value_text ?? fv.value_date ?? fv.value_json;
-                const schema = fv.field_schema as unknown as { field_key: string; field_name: string; field_type: string } | null;
-                if (schema?.field_key) {
-                    values[schema.field_key] = val;
-                    schemaMap[schema.field_key] = schema;
-                }
-            });
-
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return { ...entity, field_values: values, _schemaMap: schemaMap } as any;
+            return data;
         },
-        enabled: !!id
+        enabled: !!id,
+    });
+
+    // Mező sémák a megjelenítési nevekhez
+    const { data: fieldSchemas = [] } = useQuery({
+        queryKey: ['field-schemas', person?.entity_type_id],
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('field_schemas')
+                .select('field_key, field_name')
+                .eq('entity_type_id', person!.entity_type_id);
+            return data || [];
+        },
+        enabled: !!person?.entity_type_id,
+    });
+
+    // Összekapcsolt felhasználó neve
+    const { data: linkedUser } = useQuery({
+        queryKey: ['linked-user', person?.user_id],
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('user_profiles')
+                .select('id, full_name, email')
+                .eq('id', person!.user_id!)
+                .single();
+            return data;
+        },
+        enabled: !!person?.user_id,
+    });
+
+    // Összes aktív felhasználó a dropdown-hoz (csak adminnak)
+    const { data: allUsers = [] } = useQuery({
+        queryKey: ['user-profiles-list'],
+        queryFn: async () => {
+            const { data } = await supabase
+                .from('user_profiles')
+                .select('id, full_name, email')
+                .eq('is_active', true)
+                .order('full_name');
+            return data || [];
+        },
+        enabled: canManageUsers,
     });
 
     if (isLoading) return <DetailSkeleton />;
@@ -114,14 +131,45 @@ value_text,
     };
 
     const handleDelete = async () => {
-        if (confirm("Biztosan törölni szeretnéd?")) {
+        if (confirm('Biztosan törölni szeretnéd?')) {
             await remove(person.id);
             navigate('/personnel');
         }
     };
 
-    const getLabel = (key: string) => person._schemaMap?.[key]?.field_name || key;
-    const color = avatarColor(person.display_name)
+    const handleLinkUser = async () => {
+        if (!selectedUserId) return;
+        setIsLinking(true);
+        try {
+            await linkUser({ personnelId: person.id, userId: selectedUserId });
+            toast.success('Fiók sikeresen összekapcsolva.');
+            setSelectedUserId('');
+            refetch();
+        } catch {
+            toast.error('Hiba az összekapcsolás során.');
+        } finally {
+            setIsLinking(false);
+        }
+    };
+
+    const handleUnlinkUser = async () => {
+        if (!confirm('Biztosan megszünteted a fiókhoz való kapcsolatot?')) return;
+        setIsLinking(true);
+        try {
+            await linkUser({ personnelId: person.id, userId: null });
+            toast.success('Kapcsolat megszüntetve.');
+            refetch();
+        } catch {
+            toast.error('Hiba a kapcsolat megszüntetése során.');
+        } finally {
+            setIsLinking(false);
+        }
+    };
+
+    const getLabel = (key: string) =>
+        fieldSchemas.find((s: { field_key: string; field_name: string }) => s.field_key === key)?.field_name || key;
+
+    const color = avatarColor(person.display_name);
 
     return (
         <motion.div
@@ -153,16 +201,18 @@ value_text,
                         <Edit className="w-3.5 h-3.5" />
                         Szerkesztés
                     </motion.button>
-                    <motion.button
-                        whileHover={{ y: -1 }}
-                        whileTap={{ scale: 0.97 }}
-                        onClick={handleDelete}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-status-critical transition-colors"
-                        style={{ background: 'rgba(201,59,59,0.07)', border: '1px solid rgba(201,59,59,0.15)' }}
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Törlés
-                    </motion.button>
+                    {canManageUsers && (
+                        <motion.button
+                            whileHover={{ y: -1 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={handleDelete}
+                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-status-critical transition-colors"
+                            style={{ background: 'rgba(201,59,59,0.07)', border: '1px solid rgba(201,59,59,0.15)' }}
+                        >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Törlés
+                        </motion.button>
+                    )}
                 </div>
             </div>
 
@@ -180,11 +230,9 @@ value_text,
                         boxShadow: '0 1px 4px rgba(30,50,35,0.05), 0 0 0 1px rgba(90,110,95,0.10)',
                     }}
                 >
-                    {/* Állapot csík */}
                     <div className={`h-[3px] w-full ${person.is_active ? 'bg-gradient-to-r from-primary-400/50 to-transparent' : 'bg-gradient-to-r from-status-critical/40 to-transparent'}`} />
 
                     <div className="p-6 text-center space-y-4">
-                        {/* Nagy avatar */}
                         <motion.div
                             whileHover={{ scale: 1.04 }}
                             className={`w-20 h-20 rounded-full bg-gradient-to-br ${color.from} ${color.to} flex items-center justify-center text-white text-3xl font-bold mx-auto`}
@@ -202,7 +250,6 @@ value_text,
                             </p>
                         </div>
 
-                        {/* Státusz badge */}
                         <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11.5px] font-semibold ${
                             person.is_active ? 'status-ok' : 'status-critical'
                         }`}>
@@ -210,7 +257,6 @@ value_text,
                             {person.is_active ? 'Aktív státusz' : 'Inaktív'}
                         </div>
 
-                        {/* Felelős */}
                         {person.responsible_user && (
                             <div className="pt-4 border-t text-left"
                                 style={{ borderColor: 'rgba(90,110,95,0.12)' }}>
@@ -227,6 +273,32 @@ value_text,
                                 </div>
                             </div>
                         )}
+
+                        {/* Összekapcsolt fiók badge */}
+                        <div className="pt-4 border-t text-left"
+                            style={{ borderColor: 'rgba(90,110,95,0.12)' }}>
+                            <p className="text-[10.5px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                Rendszer fiók
+                            </p>
+                            {linkedUser ? (
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 rounded-lg bg-green-100">
+                                        <Link className="w-3.5 h-3.5 text-green-600" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[12px] font-semibold text-text-primary">{linkedUser.full_name}</p>
+                                        <p className="text-[11px] text-muted-foreground">{linkedUser.email}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2">
+                                    <div className="p-1.5 rounded-lg bg-gray-100">
+                                        <LinkIcon className="w-3.5 h-3.5 text-gray-400" />
+                                    </div>
+                                    <p className="text-[12px] text-muted-foreground italic">Nincs összekapcsolva</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </motion.div>
 
@@ -235,58 +307,132 @@ value_text,
                     initial={{ opacity: 0, x: 10 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-                    className="md:col-span-2 rounded-2xl overflow-hidden"
-                    style={{
-                        background: 'var(--color-bg-card)',
-                        boxShadow: '0 1px 4px rgba(30,50,35,0.05), 0 0 0 1px rgba(90,110,95,0.10)',
-                    }}
+                    className="md:col-span-2 space-y-5"
                 >
-                    {/* Fejléc */}
-                    <div className="px-6 py-4 border-b flex items-center gap-2.5"
-                        style={{ borderColor: 'rgba(90,110,95,0.10)', background: 'rgba(240,245,241,0.4)' }}>
-                        <div className="p-1.5 rounded-lg bg-primary-100">
-                            <FileText className="w-4 h-4 text-primary-600" />
+                    {/* Mezők */}
+                    <div className="rounded-2xl overflow-hidden"
+                        style={{
+                            background: 'var(--color-bg-card)',
+                            boxShadow: '0 1px 4px rgba(30,50,35,0.05), 0 0 0 1px rgba(90,110,95,0.10)',
+                        }}
+                    >
+                        <div className="px-6 py-4 border-b flex items-center gap-2.5"
+                            style={{ borderColor: 'rgba(90,110,95,0.10)', background: 'rgba(240,245,241,0.4)' }}>
+                            <div className="p-1.5 rounded-lg bg-primary-100">
+                                <FileText className="w-4 h-4 text-primary-600" />
+                            </div>
+                            <h2 className="text-[14px] font-semibold text-text-primary">
+                                Adatok és dokumentumok
+                            </h2>
                         </div>
-                        <h2 className="text-[14px] font-semibold text-text-primary">
-                            Adatok és dokumentumok
-                        </h2>
+
+                        <div className="p-6">
+                            {Object.keys(person.field_values || {}).length === 0 ? (
+                                <div className="text-center py-8">
+                                    <FileText className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                                    <p className="text-[13px] text-muted-foreground italic">Nincsenek rögzített adatok.</p>
+                                </div>
+                            ) : (
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    {Object.entries(person.field_values || {}).map(([key, value], i) => {
+                                        if (!value) return null;
+                                        return (
+                                            <motion.div
+                                                key={key}
+                                                initial={{ opacity: 0, y: 6 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: 0.15 + i * 0.04 }}
+                                                className="p-3.5 rounded-xl"
+                                                style={{
+                                                    background: 'rgba(240,245,241,0.5)',
+                                                    border: '1px solid rgba(90,110,95,0.10)',
+                                                }}
+                                            >
+                                                <p className="text-[10.5px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                                                    {getLabel(key)}
+                                                </p>
+                                                <p className="text-[13.5px] font-semibold text-text-primary break-words">
+                                                    {String(value)}
+                                                </p>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
-                    {/* Mezők rács */}
-                    <div className="p-6">
-                        {Object.keys(person.field_values || {}).length === 0 ? (
-                            <div className="text-center py-8">
-                                <FileText className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                                <p className="text-[13px] text-muted-foreground italic">Nincsenek rögzített adatok.</p>
+                    {/* Fiók összekapcsolás — csak adminnak */}
+                    {canManageUsers && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2 }}
+                            className="rounded-2xl overflow-hidden"
+                            style={{
+                                background: 'var(--color-bg-card)',
+                                boxShadow: '0 1px 4px rgba(30,50,35,0.05), 0 0 0 1px rgba(90,110,95,0.10)',
+                            }}
+                        >
+                            <div className="px-6 py-4 border-b flex items-center gap-2.5"
+                                style={{ borderColor: 'rgba(90,110,95,0.10)', background: 'rgba(240,245,241,0.4)' }}>
+                                <div className="p-1.5 rounded-lg bg-blue-100">
+                                    <Link className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <h2 className="text-[14px] font-semibold text-text-primary">
+                                    Fiók összekapcsolás
+                                </h2>
                             </div>
-                        ) : (
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                {Object.entries(person.field_values || {}).map(([key, value], i) => {
-                                    if (!value) return null;
-                                    return (
-                                        <motion.div
-                                            key={key}
-                                            initial={{ opacity: 0, y: 6 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: 0.15 + i * 0.04 }}
-                                            className="p-3.5 rounded-xl"
+
+                            <div className="p-6 space-y-4">
+                                {linkedUser ? (
+                                    <div className="flex items-center justify-between">
+                                        <div>
+                                            <p className="text-[13px] font-semibold text-text-primary">{linkedUser.full_name}</p>
+                                            <p className="text-[12px] text-muted-foreground">{linkedUser.email}</p>
+                                        </div>
+                                        <button
+                                            onClick={handleUnlinkUser}
+                                            disabled={isLinking}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-medium text-status-critical transition-colors disabled:opacity-50"
+                                            style={{ background: 'rgba(201,59,59,0.07)', border: '1px solid rgba(201,59,59,0.15)' }}
+                                        >
+                                            Kapcsolat megszüntetése
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3">
+                                        <select
+                                            value={selectedUserId}
+                                            onChange={(e) => setSelectedUserId(e.target.value)}
+                                            className="flex-1 px-3 py-2 rounded-xl text-[13px] text-text-primary border transition-all"
                                             style={{
-                                                background: 'rgba(240,245,241,0.5)',
-                                                border: '1px solid rgba(90,110,95,0.10)',
+                                                background: 'rgba(235,240,236,0.5)',
+                                                border: '1px solid rgba(90,110,95,0.15)',
                                             }}
                                         >
-                                            <p className="text-[10.5px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
-                                                {getLabel(key)}
-                                            </p>
-                                            <p className="text-[13.5px] font-semibold text-text-primary break-words">
-                                                {String(value)}
-                                            </p>
-                                        </motion.div>
-                                    );
-                                })}
+                                            <option value="">Válassz felhasználót…</option>
+                                            {allUsers.map((u: { id: string; full_name: string; email: string }) => (
+                                                <option key={u.id} value={u.id}>
+                                                    {u.full_name} ({u.email})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={handleLinkUser}
+                                            disabled={!selectedUserId || isLinking}
+                                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[13px] font-semibold gradient-primary text-white transition-all disabled:opacity-40"
+                                        >
+                                            Összekapcsol
+                                        </button>
+                                    </div>
+                                )}
+                                <p className="text-[11.5px] text-muted-foreground">
+                                    Az összekapcsolt felhasználó be tud jelentkezni és látja a saját személyes adatlapját.
+                                </p>
                             </div>
-                        )}
-                    </div>
+                        </motion.div>
+                    )}
                 </motion.div>
             </div>
 

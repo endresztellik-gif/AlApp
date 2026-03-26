@@ -9,6 +9,7 @@ export interface Personnel {
     is_active: boolean;
     created_at: string;
     created_by?: string;
+    user_id?: string | null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     field_values: Record<string, any>; // JSONB field_key -> value mapping
     entity_type?: {
@@ -146,6 +147,19 @@ export function usePersonnel() {
         }
     })
 
+    const linkUserMutation = useMutation({
+        mutationFn: async ({ personnelId, userId }: { personnelId: string; userId: string | null }) => {
+            const { error } = await supabase
+                .from('personnel')
+                .update({ user_id: userId })
+                .eq('id', personnelId);
+            if (error) throw error;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['personnel'] });
+        },
+    });
+
     return {
         personnel,
         isLoading,
@@ -153,5 +167,6 @@ export function usePersonnel() {
         create: createMutation.mutateAsync,
         update: updateMutation.mutateAsync,
         remove: deleteMutation.mutateAsync,
+        linkUser: linkUserMutation.mutateAsync,
     };
 }

@@ -1,9 +1,11 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Plus, Users, LayoutGrid, List
 } from 'lucide-react';
 import { usePersonnel, Personnel } from '../hooks/usePersonnel';
+import { usePermissions } from '@/core/permissions/usePermissions';
 import { PersonnelCard } from '../components/PersonnelCard';
 import { PersonnelForm } from '../components/PersonnelForm';
 
@@ -25,10 +27,19 @@ function PersonnelSkeleton({ count = 8 }: { count?: number }) {
 
 export function PersonnelListPage() {
     const { personnel, isLoading, create, update, remove } = usePersonnel();
+    const { role } = usePermissions();
+    const navigate = useNavigate();
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchQuery, setSearchQuery] = useState('');
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingPerson, setEditingPerson] = useState<Personnel | undefined>(undefined);
+
+    // user role: ha van összekapcsolt rekord, automatikusan oda navigálunk
+    useEffect(() => {
+        if (role === 'user' && !isLoading && personnel && personnel.length === 1) {
+            navigate(`/personnel/${personnel[0].id}`, { replace: true });
+        }
+    }, [role, isLoading, personnel, navigate]);
 
     const filteredPersonnel = useMemo(() => {
         if (!personnel) return [];
@@ -183,12 +194,14 @@ export function PersonnelListPage() {
                                 <Users className="w-8 h-8 text-primary-300" />
                             </motion.div>
                             <h3 className="text-[15px] font-semibold text-text-primary mb-1">
-                                {searchQuery ? 'Nincs találat' : 'Még nincsenek személyek'}
+                                {searchQuery ? 'Nincs találat' : (role === 'user' ? 'Nincs összekapcsolt adatlap' : 'Még nincsenek személyek')}
                             </h3>
                             <p className="text-[13px] text-muted-foreground max-w-xs mx-auto">
                                 {searchQuery
                                     ? 'Próbálj más keresési feltételt.'
-                                    : 'Hozz létre egy új személyt a gombra kattintva.'}
+                                    : (role === 'user'
+                                        ? 'Az adminisztrátor még nem kapcsolta össze a fiókodat személyes adatlappal.'
+                                        : 'Hozz létre egy új személyt a gombra kattintva.')}
                             </p>
                         </motion.div>
                     ) : (
