@@ -194,15 +194,27 @@ export function PersonnelListPage() {
                                 <Users className="w-8 h-8 text-primary-300" />
                             </motion.div>
                             <h3 className="text-[15px] font-semibold text-text-primary mb-1">
-                                {searchQuery ? 'Nincs találat' : (role === 'user' ? 'Nincs összekapcsolt adatlap' : 'Még nincsenek személyek')}
+                                {searchQuery ? 'Nincs találat' : (role === 'user' ? 'Még nincs személyes adatlapod' : 'Még nincsenek személyek')}
                             </h3>
-                            <p className="text-[13px] text-muted-foreground max-w-xs mx-auto">
+                            <p className="text-[13px] text-muted-foreground max-w-xs mx-auto mb-5">
                                 {searchQuery
                                     ? 'Próbálj más keresési feltételt.'
                                     : (role === 'user'
-                                        ? 'Az adminisztrátor még nem kapcsolta össze a fiókodat személyes adatlappal.'
+                                        ? 'Hozd létre a saját adatlapodat — itt tarthatod nyilván a képesítéseidet, lejárataidat.'
                                         : 'Hozz létre egy új személyt a gombra kattintva.')}
                             </p>
+                            {!searchQuery && role === 'user' && (
+                                <motion.button
+                                    whileHover={{ y: -1 }}
+                                    whileTap={{ scale: 0.97 }}
+                                    onClick={() => setIsCreateOpen(true)}
+                                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl gradient-primary text-white text-[13.5px] font-semibold"
+                                    style={{ boxShadow: '0 3px 10px -2px rgba(35,86,52,0.30)' }}
+                                >
+                                    <Plus className="w-4 h-4" strokeWidth={2.5} />
+                                    Saját adatlap létrehozása
+                                </motion.button>
+                            )}
                         </motion.div>
                     ) : (
                         <motion.div

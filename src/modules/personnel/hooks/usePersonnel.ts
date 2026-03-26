@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuditLogger } from '@/modules/admin/hooks/useAuditLogsAdmin';
+import { useAuth } from '@/core/auth/useAuth';
 
 export interface Personnel {
     id: string;
@@ -26,6 +27,7 @@ export interface Personnel {
 export function usePersonnel() {
     const queryClient = useQueryClient();
     const { mutate: log } = useAuditLogger();
+    const { user, profile } = useAuth();
 
     const fetchPersonnel = async () => {
         // Single query to personnel table (JSONB field_values)
@@ -68,7 +70,9 @@ export function usePersonnel() {
                     display_name: newPerson.display_name,
                     responsible_user_id: newPerson.responsible_user_id || null,
                     is_active: newPerson.is_active ?? true,
-                    field_values: newPerson.field_values // JSONB direct insert
+                    field_values: newPerson.field_values,
+                    // user role esetén az adatlap automatikusan a saját fiókhoz kötődik
+                    user_id: profile?.role === 'user' ? (user?.id ?? null) : null,
                 })
                 .select()
                 .single();
