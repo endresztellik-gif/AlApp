@@ -34,11 +34,11 @@ export function useNotificationHistory() {
                 reminder_id: string;
                 sent_at: string;
                 notify_before_minutes: number;
-                personal_reminders: { title: string } | null;
+                personal_reminders: { title: string }[] | null;
             }) => ({
                 id: row.id,
                 reminder_id: row.reminder_id,
-                reminder_title: row.personal_reminders?.title ?? '(törölt emlékeztető)',
+                reminder_title: (Array.isArray(row.personal_reminders) ? row.personal_reminders[0]?.title : null) ?? '(törölt emlékeztető)',
                 sent_at: row.sent_at,
                 notify_before_minutes: row.notify_before_minutes,
             }));
