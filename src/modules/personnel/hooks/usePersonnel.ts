@@ -22,6 +22,7 @@ export interface Personnel {
         full_name: string;
     };
     photos?: unknown[];
+    intended_role?: string | null;
 }
 
 export function usePersonnel() {
@@ -61,6 +62,7 @@ export function usePersonnel() {
             field_values: Record<string, unknown>; // field_key -> value
             responsible_user_id?: string;
             is_active?: boolean;
+            intended_role?: string | null;
         }) => {
             // Direct JSONB insert - much simpler!
             const { data, error } = await supabase
@@ -71,6 +73,7 @@ export function usePersonnel() {
                     responsible_user_id: newPerson.responsible_user_id || null,
                     is_active: newPerson.is_active ?? true,
                     field_values: newPerson.field_values,
+                    intended_role: newPerson.intended_role ?? null,
                     // user role esetén az adatlap automatikusan a saját fiókhoz kötődik
                     user_id: profile?.role === 'user' ? (user?.id ?? null) : null,
                 })

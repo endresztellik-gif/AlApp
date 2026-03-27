@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 
 // ─────────────────────────────────────────────
@@ -25,7 +24,6 @@ async function importVapidPrivateKey(
     publicKeyB64u: string
 ): Promise<CryptoKey> {
     const pubBytes = base64urlToUint8Array(publicKeyB64u);
-    // pubBytes = 04 || x (32) || y (32)
     const x = uint8ArrayToBase64url(pubBytes.slice(1, 33));
     const y = uint8ArrayToBase64url(pubBytes.slice(33, 65));
 
@@ -109,6 +107,82 @@ async function sendPushNotification(
 }
 
 // ─────────────────────────────────────────────
+// Gmail OAuth 2.0 helpers
+// ─────────────────────────────────────────────
+
+async function getGmailAccessToken(
+    clientId: string,
+    clientSecret: string,
+    refreshToken: string
+): Promise<string> {
+    const resp = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            client_id: clientId,
+            client_secret: clientSecret,
+            refresh_token: refreshToken,
+            grant_type: "refresh_token",
+        }),
+    });
+    if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`Gmail token refresh failed: ${err}`);
+    }
+    const json = await resp.json();
+    return json.access_token;
+}
+
+function toBase64Url(str: string): string {
+    const bytes = new TextEncoder().encode(str);
+    let binary = "";
+    for (const b of bytes) binary += String.fromCharCode(b);
+    return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+
+function encodeMimeSubject(subject: string): string {
+    const bytes = new TextEncoder().encode(subject);
+    let binary = "";
+    for (const b of bytes) binary += String.fromCharCode(b);
+    return `=?UTF-8?B?${btoa(binary)}?=`;
+}
+
+async function sendGmailMessage(
+    accessToken: string,
+    fromEmail: string,
+    to: string,
+    subject: string,
+    body: string
+): Promise<void> {
+    const message = [
+        `From: ${encodeMimeSubject("AlApp Emlékeztető")} <${fromEmail}>`,
+        `To: ${to}`,
+        `Subject: ${encodeMimeSubject(subject)}`,
+        "MIME-Version: 1.0",
+        "Content-Type: text/plain; charset=UTF-8",
+        "",
+        body,
+    ].join("\r\n");
+
+    const resp = await fetch(
+        "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+        {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ raw: toBase64Url(message) }),
+        }
+    );
+
+    if (!resp.ok) {
+        const err = await resp.text();
+        throw new Error(`Gmail send failed ${resp.status}: ${err}`);
+    }
+}
+
+// ─────────────────────────────────────────────
 // Main handler
 // ─────────────────────────────────────────────
 
@@ -119,13 +193,15 @@ serve(async (req) => {
     }
 
     try {
-        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-        const serviceKey  = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const smtpUser    = Deno.env.get("SMTP_USER")!;
-        const smtpPass    = Deno.env.get("SMTP_PASS")!;
-        const vapidPub    = Deno.env.get("VAPID_PUBLIC_KEY")!;
-        const vapidPriv   = Deno.env.get("VAPID_PRIVATE_KEY")!;
-        const vapidEmail  = Deno.env.get("VAPID_EMAIL") ?? `mailto:${smtpUser}`;
+        const supabaseUrl        = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey         = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const gmailUser          = Deno.env.get("SMTP_USER")!;
+        const googleClientId     = Deno.env.get("GOOGLE_CLIENT_ID")!;
+        const googleClientSecret = Deno.env.get("GOOGLE_CLIENT_SECRET")!;
+        const googleRefreshToken = Deno.env.get("GOOGLE_REFRESH_TOKEN")!;
+        const vapidPub           = Deno.env.get("VAPID_PUBLIC_KEY")!;
+        const vapidPriv          = Deno.env.get("VAPID_PRIVATE_KEY")!;
+        const vapidEmail         = Deno.env.get("VAPID_EMAIL") ?? `mailto:${gmailUser}`;
 
         const supabase = createClient(supabaseUrl, serviceKey);
 
@@ -153,7 +229,6 @@ serve(async (req) => {
             );
         }
 
-        // Szűrjük azokat, amelyek trigger ideje <= most
         interface ReminderJoin {
             id: string;
             title: string;
@@ -204,9 +279,12 @@ serve(async (req) => {
             return null;
         });
 
-        // 4. SMTP client
-        const smtpClient = new SmtpClient();
-        let smtpConnected = false;
+        // 4. Gmail access token (egyszer az összes emailhez)
+        const gmailAccessToken = await getGmailAccessToken(
+            googleClientId,
+            googleClientSecret,
+            googleRefreshToken
+        );
 
         const results: { id: string; email: boolean; push: boolean }[] = [];
 
@@ -228,7 +306,7 @@ serve(async (req) => {
             else if (minutesBefore >= 60)    when = `${Math.round(minutesBefore / 60)} órával előtte`;
             else if (minutesBefore > 0)      when = `${minutesBefore} perccel előtte`;
 
-            const notifTitle = `🔔 Emlékeztető: ${reminder.title}`;
+            const notifTitle = `Emlékeztető: ${reminder.title}`;
             const notifBody  = `Határidő: ${dueDateStr}${reminder.description ? `\n${reminder.description}` : ""}`;
 
             let emailSent = false;
@@ -237,32 +315,22 @@ serve(async (req) => {
             // ── Email ─────────────────────────────────
             if (profile?.email) {
                 try {
-                    if (!smtpConnected) {
-                        await smtpClient.connectTLS({
-                            hostname: "smtp.gmail.com",
-                            port: 465,
-                            username: smtpUser,
-                            password: smtpPass,
-                        });
-                        smtpConnected = true;
-                    }
+                    await sendGmailMessage(
+                        gmailAccessToken,
+                        gmailUser,
+                        profile.email,
+                        notifTitle,
+                        `Szia!
 
-                    await smtpClient.send({
-                        from: `AlApp Emlékeztető <${smtpUser}>`,
-                        to: profile.email,
-                        subject: notifTitle,
-                        content: `Szia!
-
-Ez egy automatikus emlékeztető, amit "${reminder.title}" tárgyban állítottál be ${dueDateStr}-ra.${reminder.description ? `\n\nMegjegyzés: ${reminder.description}` : ''}
+Ez egy automatikus emlékeztető, amit "${reminder.title}" tárgyban állítottál be ${dueDateStr}-ra.${reminder.description ? `\n\nMegjegyzés: ${reminder.description}` : ""}
 
 Értesítési beállítás: ${when}
 
 A személyes emlékeztetőidet az AlApp /reminders oldalán kezelheted.
 
 Üdvözlettel,
-AlApp Rendszer`.trim(),
-                    });
-
+AlApp Rendszer`
+                    );
                     emailSent = true;
                 } catch (e) {
                     console.error(`Email hiba (user ${row.user_id}):`, e);
@@ -292,10 +360,6 @@ AlApp Rendszer`.trim(),
                 .eq("id", row.id);
 
             results.push({ id: row.id, email: emailSent, push: pushSent });
-        }
-
-        if (smtpConnected) {
-            await smtpClient.close().catch(() => {});
         }
 
         return new Response(

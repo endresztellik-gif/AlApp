@@ -12,6 +12,7 @@ interface PersonnelFormData {
     entity_type_id: string;
     field_values: Record<string, unknown>;
     id?: string;
+    intended_role?: string | null;
 }
 
 interface PersonnelFormProps {
@@ -35,6 +36,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
         display_name: '',
         responsible_user_id: '',
         is_active: true,
+        intended_role: '' as string,
     });
     const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,6 +47,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                 display_name: initialData.display_name,
                 responsible_user_id: initialData.responsible_user_id || '',
                 is_active: initialData.is_active,
+                intended_role: initialData.intended_role || '',
             });
             setSelectedTypeId(initialData.entity_type_id);
             setDynamicValues(initialData.field_values || {});
@@ -64,7 +67,8 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                 ...formData,
                 entity_type_id: selectedTypeId,
                 field_values: dynamicValues,
-                id: initialData?.id // Pass ID if updating
+                id: initialData?.id,
+                intended_role: formData.intended_role || null,
             });
             onCancel(); // Close on success
         } catch (error) {
@@ -134,6 +138,25 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                                     />
                                     <span className="text-sm font-medium">Aktív státusz</span>
                                 </label>
+                            </div>
+
+                            <div>
+                                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                    Tervezett jogosultság
+                                </label>
+                                <select
+                                    value={formData.intended_role}
+                                    onChange={(e) => setFormData(p => ({ ...p, intended_role: e.target.value }))}
+                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                                >
+                                    <option value="">– nincs megadva –</option>
+                                    <option value="user">Felhasználó (beosztott)</option>
+                                    <option value="reader">Olvasó/Szerkesztő (csoportvezető)</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                                <p className="text-[11px] text-muted-foreground mt-1">
+                                    Meghíváskor a rendszer figyelmeztet, ha a szerepkör eltér ettől.
+                                </p>
                             </div>
                         </div>
 

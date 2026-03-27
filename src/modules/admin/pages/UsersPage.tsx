@@ -1,11 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, UserPlus, Shield, ShieldCheck, ShieldAlert,
-    Loader2, X, Check, Ban,
+    Loader2, X, Check, Ban, AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUsersAdmin } from '../hooks/useUsersAdmin';
+import { usePersonnel } from '@/modules/personnel/hooks/usePersonnel';
 
 const roleLabels: Record<string, { label: string; icon: typeof Shield; color: string; bg: string }> = {
     admin: { label: 'Admin', icon: ShieldAlert, color: '#b83c3c', bg: 'rgba(184,60,60,0.09)' },
@@ -27,11 +28,23 @@ function avatarGradient(name: string) {
 
 export function UsersPage() {
     const { users, isLoading, updateRole, toggleActive, inviteUser, isInviting } = useUsersAdmin();
+    const { personnel } = usePersonnel();
     const [showInvite, setShowInvite] = useState(false);
     const [inviteEmail, setInviteEmail] = useState('');
     const [inviteName, setInviteName] = useState('');
     const [inviteRole, setInviteRole] = useState('user');
     const [editingRole, setEditingRole] = useState<string | null>(null);
+
+    // Find personnel record matching the invite name (case-insensitive)
+    const matchedPersonnel = useMemo(() => {
+        if (!inviteName.trim() || !personnel) return null;
+        const query = inviteName.trim().toLowerCase();
+        return personnel.find(p => p.display_name.toLowerCase() === query) ?? null;
+    }, [inviteName, personnel]);
+
+    const roleMismatch = matchedPersonnel?.intended_role
+        ? matchedPersonnel.intended_role !== inviteRole
+        : false;
 
     const handleInvite = useCallback(async (e: React.FormEvent) => {
         e.preventDefault();
@@ -219,6 +232,40 @@ export function UsersPage() {
                                     </select>
                                 </div>
                             </div>
+                            {/* Role mismatch warning */}
+                            <AnimatePresence>
+                                {roleMismatch && matchedPersonnel && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="flex items-start gap-2.5 px-4 py-3 rounded-xl"
+                                        style={{ background: 'rgba(184,120,30,0.08)', border: '1px solid rgba(184,120,30,0.25)' }}
+                                    >
+                                        <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" style={{ color: '#b8781e' }} />
+                                        <p className="text-[12.5px]" style={{ color: '#8a5a10' }}>
+                                            <strong>{matchedPersonnel.display_name}</strong> személyi lapján a tervezett jogosultság:{' '}
+                                            <strong>{roleLabels[matchedPersonnel.intended_role!]?.label ?? matchedPersonnel.intended_role}</strong>,
+                                            de a meghívóban <strong>{roleLabels[inviteRole]?.label}</strong> van kiválasztva.
+                                        </p>
+                                    </motion.div>
+                                )}
+                                {matchedPersonnel && matchedPersonnel.intended_role && !roleMismatch && (
+                                    <motion.div
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="flex items-center gap-2.5 px-4 py-3 rounded-xl"
+                                        style={{ background: 'rgba(35,120,60,0.07)', border: '1px solid rgba(35,120,60,0.20)' }}
+                                    >
+                                        <Check className="w-4 h-4 shrink-0 text-primary-600" />
+                                        <p className="text-[12.5px] text-primary-700">
+                                            A szerepkör egyezik <strong>{matchedPersonnel.display_name}</strong> személyi lapjával.
+                                        </p>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
                             <div className="flex justify-end gap-2 pt-1">
                                 <button type="button" onClick={() => setShowInvite(false)}
                                     className="px-4 py-2 rounded-xl text-[12.5px] font-medium text-muted-foreground hover:text-text-primary transition-colors"

@@ -4,6 +4,11 @@ enabled = true
 verify_jwt = false
 entrypoint = "./functions/invite-user/index.ts"
 
+[functions.send-reminders]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/send-reminders/index.ts"
+
 [functions.database-backup]
 enabled = true
 verify_jwt = true
