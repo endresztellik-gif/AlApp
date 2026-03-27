@@ -372,8 +372,14 @@ serve(async (req) => {
                 .in("user_id", userIds),
         ]);
 
-        const profileMap  = new Map(profiles?.map((p)  => [p.id,  p]));
-        const pushSubsMap = new Map(pushSubs?.map((ps) => [ps.user_id, ps.subscription as PushSubscriptionJSON]));
+        const profileMap  = new Map(profiles?.map((p) => [p.id, p]));
+        // Multi-device: egy userhez több subscription is tartozhat
+        const pushSubsMap = new Map<string, PushSubscriptionJSON[]>();
+        for (const ps of pushSubs ?? []) {
+            const list = pushSubsMap.get(ps.user_id) ?? [];
+            list.push(ps.subscription as PushSubscriptionJSON);
+            pushSubsMap.set(ps.user_id, list);
+        }
 
         // 3. VAPID private key betöltése
         const vapidPrivateKey = await importVapidPrivateKey(vapidPriv, vapidPub).catch((e) => {
@@ -392,7 +398,6 @@ serve(async (req) => {
 
         for (const row of triggered) {
             const profile  = profileMap.get(row.user_id);
-            const pushSub  = pushSubsMap.get(row.user_id);
             const reminder = row.reminder;
             const dueDate  = new Date(reminder.due_at);
 
@@ -439,20 +444,26 @@ AlApp Rendszer`
                 }
             }
 
-            // ── Push ──────────────────────────────────
-            if (pushSub && vapidPrivateKey) {
-                try {
-                    await sendPushNotification(
-                        pushSub,
-                        { title: notifTitle, body: notifBody, url: "/reminders" },
-                        vapidPrivateKey,
-                        vapidPub,
-                        vapidEmail
-                    );
-                    pushSent = true;
-                } catch (e) {
-                    console.error(`Push hiba (user ${row.user_id}):`, e);
-                }
+            // ── Push (minden eszközre) ────────────────
+            const pushSubs = pushSubsMap.get(row.user_id) ?? [];
+            if (pushSubs.length > 0 && vapidPrivateKey) {
+                const pushResults = await Promise.allSettled(
+                    pushSubs.map((sub) =>
+                        sendPushNotification(
+                            sub,
+                            { title: notifTitle, body: notifBody, url: "/reminders" },
+                            vapidPrivateKey,
+                            vapidPub,
+                            vapidEmail
+                        )
+                    )
+                );
+                pushSent = pushResults.some((r) => r.status === "fulfilled");
+                pushResults.forEach((r, i) => {
+                    if (r.status === "rejected") {
+                        console.error(`Push hiba (user ${row.user_id}, sub ${i}):`, r.reason);
+                    }
+                });
             }
 
             // ── sent_at beállítása ────────────────────

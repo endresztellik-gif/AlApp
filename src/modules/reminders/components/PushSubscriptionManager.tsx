@@ -48,8 +48,8 @@ export function PushSubscriptionManager() {
             const { error } = await supabase
                 .from('push_subscriptions')
                 .upsert(
-                    { user_id: user.id, subscription: sub.toJSON() },
-                    { onConflict: 'user_id' }
+                    { user_id: user.id, subscription: sub.toJSON(), endpoint: sub.endpoint },
+                    { onConflict: 'endpoint' }
                 );
 
             if (error) throw error;
