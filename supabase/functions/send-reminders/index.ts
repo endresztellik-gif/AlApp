@@ -76,6 +76,106 @@ interface PushSubscriptionJSON {
     keys: { p256dh: string; auth: string };
 }
 
+// RFC 8291 — Web Push Message Encryption (aes128gcm)
+async function encryptWebPushPayload(
+    plaintext: Uint8Array,
+    p256dhB64u: string,
+    authB64u: string
+): Promise<{ body: Uint8Array; senderPublicKey: Uint8Array; salt: Uint8Array }> {
+    const receiverPubBytes = base64urlToUint8Array(p256dhB64u);
+    const authSecret = base64urlToUint8Array(authB64u);
+
+    // Import receiver's public key for ECDH
+    const receiverKey = await crypto.subtle.importKey(
+        "raw",
+        receiverPubBytes,
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        []
+    );
+
+    // Generate ephemeral sender key pair
+    const senderKeyPair = await crypto.subtle.generateKey(
+        { name: "ECDH", namedCurve: "P-256" },
+        true,
+        ["deriveBits"]
+    );
+    const senderPubRaw = new Uint8Array(
+        await crypto.subtle.exportKey("raw", senderKeyPair.publicKey)
+    );
+
+    // ECDH shared secret
+    const ecdhSecret = new Uint8Array(
+        await crypto.subtle.deriveBits(
+            { name: "ECDH", public: receiverKey },
+            senderKeyPair.privateKey,
+            256
+        )
+    );
+
+    // Random 16-byte salt
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+
+    // IKM derivation: HKDF(salt=authSecret, ikm=ecdhSecret, info="WebPush: info\x00" + receiverPub + senderPub)
+    const ikmInfoPrefix = new TextEncoder().encode("WebPush: info\x00");
+    const ikmInfo = new Uint8Array(ikmInfoPrefix.length + 65 + 65);
+    ikmInfo.set(ikmInfoPrefix, 0);
+    ikmInfo.set(receiverPubBytes, ikmInfoPrefix.length);
+    ikmInfo.set(senderPubRaw, ikmInfoPrefix.length + 65);
+
+    const ecdhKeyMaterial = await crypto.subtle.importKey(
+        "raw", ecdhSecret, "HKDF", false, ["deriveBits"]
+    );
+    const IKM = new Uint8Array(await crypto.subtle.deriveBits(
+        { name: "HKDF", hash: "SHA-256", salt: authSecret, info: ikmInfo },
+        ecdhKeyMaterial,
+        256
+    ));
+
+    // CEK + nonce derivation: HKDF(salt=random_salt, ikm=IKM, ...)
+    const ikmKey = await crypto.subtle.importKey(
+        "raw", IKM, "HKDF", false, ["deriveBits"]
+    );
+
+    const CEK = new Uint8Array(await crypto.subtle.deriveBits(
+        { name: "HKDF", hash: "SHA-256", salt, info: new TextEncoder().encode("Content-Encoding: aes128gcm\x00") },
+        ikmKey,
+        128
+    ));
+    const nonce = new Uint8Array(await crypto.subtle.deriveBits(
+        { name: "HKDF", hash: "SHA-256", salt, info: new TextEncoder().encode("Content-Encoding: nonce\x00") },
+        ikmKey,
+        96
+    ));
+
+    // Encrypt: plaintext + 0x02 (end-of-record delimiter)
+    const padded = new Uint8Array(plaintext.length + 1);
+    padded.set(plaintext, 0);
+    padded[plaintext.length] = 0x02;
+
+    const aesKey = await crypto.subtle.importKey(
+        "raw", CEK, { name: "AES-GCM" }, false, ["encrypt"]
+    );
+    const ciphertext = new Uint8Array(
+        await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce, tagLength: 128 }, aesKey, padded)
+    );
+
+    // Build aes128gcm body: salt(16) + rs(4 BE) + idlen(1=65) + senderPub(65) + ciphertext
+    const rs = 4096;
+    const header = new Uint8Array(16 + 4 + 1 + 65);
+    const view = new DataView(header.buffer);
+    header.set(salt, 0);
+    view.setUint32(16, rs, false);
+    view.setUint8(20, 65);
+    header.set(senderPubRaw, 21);
+
+    const body = new Uint8Array(header.length + ciphertext.length);
+    body.set(header, 0);
+    body.set(ciphertext, header.length);
+
+    return { body, senderPublicKey: senderPubRaw, salt };
+}
+
 async function sendPushNotification(
     sub: PushSubscriptionJSON,
     payload: { title: string; body: string; url?: string },
@@ -87,22 +187,24 @@ async function sendPushNotification(
     const audience = `${url.protocol}//${url.hostname}`;
 
     const jwt = await createVapidJWT(audience, vapidPrivateKey, vapidEmail);
-    const payloadBytes = new TextEncoder().encode(JSON.stringify(payload));
+    const plaintext = new TextEncoder().encode(JSON.stringify(payload));
+
+    const { body } = await encryptWebPushPayload(plaintext, sub.keys.p256dh, sub.keys.auth);
 
     const resp = await fetch(sub.endpoint, {
         method: "POST",
         headers: {
             "Authorization": `vapid t=${jwt},k=${vapidPublicKeyB64u}`,
             "Content-Type": "application/octet-stream",
+            "Content-Encoding": "aes128gcm",
             "TTL": "86400",
-            "Content-Encoding": "aesgcm",
         },
-        body: payloadBytes,
+        body,
     });
 
     if (!resp.ok && resp.status !== 201) {
-        const body = await resp.text().catch(() => "");
-        throw new Error(`Push failed ${resp.status}: ${body}`);
+        const errText = await resp.text().catch(() => "");
+        throw new Error(`Push failed ${resp.status}: ${errText}`);
     }
 }
 
