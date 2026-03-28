@@ -44,7 +44,7 @@ export function BottomNav() {
                             key={item.to}
                             to={item.to}
                             end={item.to === '/'}
-                            className="flex flex-col items-center gap-0.5 min-w-[52px] py-1.5 px-2 relative"
+                            className="flex flex-col items-center gap-0.5 flex-1 min-w-0 py-1.5 px-1 relative"
                         >
                             {/* Aktív háttér pill */}
                             <AnimatePresence>
@@ -76,7 +76,7 @@ export function BottomNav() {
                             {/* Cimke */}
                             <motion.span
                                 animate={{ opacity: isActive ? 1 : 0.6 }}
-                                className={`relative z-10 text-[9.5px] font-semibold transition-colors duration-200 ${isActive ? 'text-primary-600' : 'text-muted-foreground'
+                                className={`relative z-10 text-[9.5px] font-semibold transition-colors duration-200 w-full text-center truncate ${isActive ? 'text-primary-600' : 'text-muted-foreground'
                                     }`}
                             >
                                 {item.label}

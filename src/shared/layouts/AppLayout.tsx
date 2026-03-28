@@ -10,7 +10,7 @@ export function AppLayout() {
     const isDesktop = useMediaQuery('(min-width: 1024px)')
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background overflow-x-hidden w-full">
             {/* Desktop Sidebar */}
             {isDesktop && <Sidebar />}
 
