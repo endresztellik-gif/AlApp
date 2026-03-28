@@ -42,44 +42,30 @@ export function EquipmentDetailPage() {
     const { data: equipment, isLoading, refetch } = useQuery({
         queryKey: ['equipment', id],
         queryFn: async () => {
-            const { data: entity, error } = await supabase
-                .from('entities')
+            const { data, error } = await supabase
+                .from('equipment')
                 .select(`
                     *,
-                    entity_type: entity_types(id, name),
-                    responsible_user: user_profiles(full_name),
-                    photos(*)
+                    entity_type:entity_types(id, name),
+                    responsible_user:user_profiles(full_name)
                 `)
                 .eq('id', id)
                 .single();
 
             if (error) throw error;
-            if (!entity) return null;
+            if (!data) return null;
 
-            const { data: fieldValues } = await supabase
-                .from('field_values')
-                .select(`
-                    value_text,
-                    value_date,
-                    value_json,
-                    field_schema: field_schemas(field_key, field_name, field_type)
-                `)
-                .eq('entity_id', id);
+            // Get field schemas for human-readable labels
+            const { data: schemas } = await supabase
+                .from('field_schemas')
+                .select('field_key, field_name, field_type')
+                .eq('entity_type_id', data.entity_type_id);
 
-            const values: Record<string, unknown> = {};
             const schemaMap: Record<string, { field_key: string; field_name: string; field_type: string }> = {};
-
-            fieldValues?.forEach(fv => {
-                const val = fv.value_text ?? fv.value_date ?? fv.value_json;
-                const schema = fv.field_schema as unknown as { field_key: string; field_name: string; field_type: string } | null;
-                if (schema?.field_key) {
-                    values[schema.field_key] = val;
-                    schemaMap[schema.field_key] = schema;
-                }
-            });
+            schemas?.forEach(s => { schemaMap[s.field_key] = s; });
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return { ...entity, field_values: values, _schemaMap: schemaMap } as any;
+            return { ...data, field_values: data.field_values || {}, photos: [], _schemaMap: schemaMap } as any;
         },
         enabled: !!id
     });

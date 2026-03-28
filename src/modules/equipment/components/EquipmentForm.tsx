@@ -86,7 +86,7 @@ export function EquipmentForm({ initialData, onSave, onCancel, isOpen }: Equipme
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
             <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -94,7 +94,7 @@ export function EquipmentForm({ initialData, onSave, onCancel, isOpen }: Equipme
                 className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl border border-border"
             >
                 <form onSubmit={handleSubmit}>
-                    <div className="flex items-center justify-between p-5 border-b border-border/50 sticky top-0 bg-card/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-between p-5 border-b border-border/50 sticky top-0 bg-card z-10">
                         <h2 className="text-lg font-semibold text-foreground">
                             {initialData ? 'Eszköz szerkesztése' : 'Új eszköz felvétele'}
                         </h2>

@@ -1,9 +1,15 @@
-import { Outlet } from 'react-router-dom';
-import { useState } from 'react';
+import { Outlet, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { BottomNav } from './BottomNav';
 import { useMediaQuery } from '@/shared/hooks/useMediaQuery';
+
+function ScrollToTop() {
+    const { pathname } = useLocation();
+    useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+    return null;
+}
 
 /**
  * Fő layout komponens – desktop-on sidebar, mobilon bottom navigation.
@@ -14,7 +20,9 @@ export function MainLayout() {
     const isDesktop = useMediaQuery('(min-width: 1024px)');
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background overflow-x-hidden">
+            <ScrollToTop />
+
             {/* Desktop Sidebar */}
             {isDesktop && <Sidebar />}
 
@@ -33,10 +41,10 @@ export function MainLayout() {
             )}
 
             {/* Main Content Area */}
-            <div style={isDesktop ? { marginLeft: 268 } : undefined}>
+            <div className="overflow-x-hidden" style={isDesktop ? { marginLeft: 268 } : undefined}>
                 <Header onMenuClick={() => setSidebarOpen(true)} />
 
-                <main className="p-4 md:p-6 lg:p-8 pb-24 lg:pb-8">
+                <main className="p-4 md:p-6 lg:p-8 pb-24 lg:pb-8 overflow-x-hidden">
                     <Outlet />
                 </main>
             </div>
