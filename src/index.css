@@ -67,7 +67,12 @@
 }
 
 /* --- Alap stílusok --- */
+html {
+  overflow-x: hidden;
+}
+
 body {
+  overflow-x: hidden;
   background-color: var(--color-bg-primary);
   color: var(--color-text-primary);
   font-family: 'Outfit', system-ui, -apple-system, sans-serif;
