@@ -186,7 +186,10 @@ async function sendPushNotification(
     const url = new URL(sub.endpoint);
     const audience = `${url.protocol}//${url.hostname}`;
 
-    const jwt = await createVapidJWT(audience, vapidPrivateKey, vapidEmail);
+    // Ensure mailto: prefix (Apple requires it in JWT sub field)
+    const sub_claim = vapidEmail.startsWith("mailto:") ? vapidEmail : `mailto:${vapidEmail}`;
+
+    const jwt = await createVapidJWT(audience, vapidPrivateKey, sub_claim);
     const plaintext = new TextEncoder().encode(JSON.stringify(payload));
 
     const { body } = await encryptWebPushPayload(plaintext, sub.keys.p256dh, sub.keys.auth);
@@ -202,6 +205,7 @@ async function sendPushNotification(
         body,
     });
 
+    console.log(`Push response: ${resp.status} (endpoint: ${url.hostname})`);
     if (!resp.ok && resp.status !== 201) {
         const errText = await resp.text().catch(() => "");
         throw new Error(`Push failed ${resp.status}: ${errText}`);
@@ -303,7 +307,8 @@ serve(async (req) => {
         const googleRefreshToken = Deno.env.get("GOOGLE_REFRESH_TOKEN")!;
         const vapidPub           = Deno.env.get("VAPID_PUBLIC_KEY")!;
         const vapidPriv          = Deno.env.get("VAPID_PRIVATE_KEY")!;
-        const vapidEmail         = Deno.env.get("VAPID_EMAIL") ?? `mailto:${gmailUser}`;
+        // VAPID_EMAIL must be a valid mailto: URL — use SMTP_USER as guaranteed-valid fallback
+        const vapidEmail = `mailto:${gmailUser}`;
 
         const supabase = createClient(supabaseUrl, serviceKey);
 
