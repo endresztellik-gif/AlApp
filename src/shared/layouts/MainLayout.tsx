@@ -44,7 +44,7 @@ export function MainLayout() {
             <div className="overflow-x-hidden" style={isDesktop ? { marginLeft: 268 } : undefined}>
                 <Header onMenuClick={() => setSidebarOpen(true)} />
 
-                <main className="p-4 md:p-6 lg:p-8 pb-24 lg:pb-8 overflow-x-hidden">
+                <main className="p-4 md:p-6 lg:p-8 pb-24 lg:pb-8">
                     <Outlet />
                 </main>
             </div>

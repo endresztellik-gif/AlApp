@@ -128,29 +128,32 @@ export function EquipmentDetailPage() {
                     className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-text-primary transition-colors"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Vissza a listához
+                    <span className="hidden sm:inline">Vissza a listához</span>
+                    <span className="sm:hidden">Vissza</span>
                 </motion.button>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                     <motion.button
                         whileHover={{ y: -1 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setIsEditOpen(true)}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-text-secondary border transition-colors hover:bg-bg-secondary"
+                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[13px] font-medium text-text-secondary border transition-colors hover:bg-bg-secondary"
                         style={{ borderColor: 'rgba(90,110,95,0.18)', background: 'var(--color-bg-card)' }}
+                        title="Szerkesztés"
                     >
                         <Edit className="w-3.5 h-3.5" />
-                        Szerkesztés
+                        <span className="hidden sm:inline">Szerkesztés</span>
                     </motion.button>
                     <motion.button
                         whileHover={{ y: -1 }}
                         whileTap={{ scale: 0.97 }}
                         onClick={handleDelete}
-                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[13px] font-medium text-status-critical transition-colors"
+                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-[13px] font-medium text-status-critical transition-colors"
                         style={{ background: 'rgba(201,59,59,0.07)', border: '1px solid rgba(201,59,59,0.15)' }}
+                        title="Törlés"
                     >
                         <Trash2 className="w-3.5 h-3.5" />
-                        Törlés
+                        <span className="hidden sm:inline">Törlés</span>
                     </motion.button>
                 </div>
             </div>
