@@ -10,7 +10,7 @@ if (typeof window !== 'undefined' && window.location.hash.includes('type=recover
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
-        storage: sessionStorage,
+        storage: localStorage,
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true

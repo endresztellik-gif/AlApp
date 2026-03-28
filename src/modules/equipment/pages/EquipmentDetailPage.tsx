@@ -16,7 +16,6 @@ import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { QRCodeGenerator } from '@/shared/components/QRCodeGenerator';
 import { useEquipmentCheckout } from '../hooks/useEquipmentCheckout';
-import { usePermissions } from '@/core/permissions/usePermissions';
 
 /* Részlap skeleton */
 function DetailSkeleton() {
@@ -38,7 +37,6 @@ export function EquipmentDetailPage() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [showQR, setShowQR] = useState(false);
     const { activeCheckout } = useEquipmentCheckout(id!);
-    const { canViewAllData } = usePermissions();
     const checkoutUrl = `${window.location.origin}/equipment/checkout/${id}`;
 
     const { data: equipment, isLoading, refetch } = useQuery({

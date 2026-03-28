@@ -70,7 +70,7 @@ export function EquipmentCheckoutPage() {
 
     const handleCheckout = async () => {
         try {
-            await checkout();
+            await checkout(undefined);
             toast.success(`${equipment.display_name} sikeresen felvéve`);
         } catch (e: unknown) {
             toast.error(e instanceof Error ? e.message : 'Nem sikerült felvenni az eszközt');
