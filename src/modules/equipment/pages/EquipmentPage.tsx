@@ -4,6 +4,7 @@ import { Wrench, Plus, Search, LayoutGrid, List } from 'lucide-react';
 import { useEquipment, Equipment } from '../hooks/useEquipment';
 import { EquipmentCard } from '../components/EquipmentCard';
 import { EquipmentForm } from '../components/EquipmentForm';
+import { useAllActiveCheckouts } from '../hooks/useEquipmentCheckout';
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -22,6 +23,14 @@ function EquipmentSkeleton({ count = 8 }: { count?: number }) {
 
 export function EquipmentPage() {
     const { equipment, isLoading, create, update, remove } = useEquipment();
+    const { data: activeCheckouts } = useAllActiveCheckouts();
+    const checkoutMap = useMemo(() => {
+        const map = new Map<string, string>();
+        for (const c of activeCheckouts ?? []) {
+            map.set(c.equipment_id, c.user?.full_name ?? 'Valaki');
+        }
+        return map;
+    }, [activeCheckouts]);
 
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [searchQuery, setSearchQuery] = useState('');
@@ -215,6 +224,7 @@ export function EquipmentPage() {
                                     equipment={item}
                                     onEdit={handleEdit}
                                     onDelete={handleDelete}
+                                    checkoutUserName={checkoutMap.get(item.id) ?? null}
                                 />
                             ))}
                         </motion.div>

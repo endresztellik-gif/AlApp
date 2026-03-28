@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
-    ArrowLeft, Edit, Trash2, Shield, Calendar, AlertCircle, Wrench, FileText, User, Loader2, Image as ImageIcon
+    ArrowLeft, Edit, Trash2, Shield, Calendar, AlertCircle, Wrench, FileText, User, Loader2, Image as ImageIcon, QrCode, PackageOpen
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/core/auth/useAuth';
@@ -14,6 +14,9 @@ import { useIncidents } from '@/modules/incidents/hooks/useIncidents';
 import { googleStorage } from '@/core/api/google-services';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
+import { QRCodeGenerator } from '@/shared/components/QRCodeGenerator';
+import { useEquipmentCheckout } from '../hooks/useEquipmentCheckout';
+import { usePermissions } from '@/core/permissions/usePermissions';
 
 /* Részlap skeleton */
 function DetailSkeleton() {
@@ -33,6 +36,10 @@ export function EquipmentDetailPage() {
     const navigate = useNavigate();
     const { update, remove } = useEquipment();
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [showQR, setShowQR] = useState(false);
+    const { activeCheckout } = useEquipmentCheckout(id!);
+    const { canViewAllData } = usePermissions();
+    const checkoutUrl = `${window.location.origin}/equipment/checkout/${id}`;
 
     const { data: equipment, isLoading, refetch } = useQuery({
         queryKey: ['equipment', id],
@@ -232,6 +239,51 @@ export function EquipmentDetailPage() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Kölcsönzési státusz */}
+                        <div className="pt-4 border-t text-left" style={{ borderColor: 'rgba(90,110,95,0.12)' }}>
+                            <p className="text-[10.5px] font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                                Jelenlegi státusz
+                            </p>
+                            {activeCheckout ? (
+                                <div className="flex items-center gap-2 p-2.5 rounded-xl"
+                                    style={{ background: 'rgba(201,59,59,0.06)', border: '1px solid rgba(201,59,59,0.15)' }}>
+                                    <PackageOpen className="w-3.5 h-3.5 text-status-critical flex-shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="text-[12px] font-semibold text-status-critical truncate">
+                                            {activeCheckout.user?.full_name ?? 'Valaki'}
+                                        </p>
+                                        <p className="text-[10.5px] text-muted-foreground">
+                                            {format(new Date(activeCheckout.checked_out_at), 'MM. dd. HH:mm', { locale: hu })} óta
+                                        </p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-2 text-[12.5px] font-semibold text-status-ok">
+                                    <span className="w-2 h-2 rounded-full bg-status-ok flex-shrink-0" />
+                                    Raktárban (szabad)
+                                </div>
+                            )}
+                        </div>
+
+                        {/* QR kód gomb */}
+                        <div className="pt-4 border-t" style={{ borderColor: 'rgba(90,110,95,0.12)' }}>
+                            <button
+                                onClick={() => setShowQR(v => !v)}
+                                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-[12.5px] font-semibold text-primary-600 bg-primary-50 hover:bg-primary-100 transition-colors"
+                            >
+                                <QrCode className="w-4 h-4" />
+                                {showQR ? 'QR kód elrejtése' : 'QR kód megjelenítése'}
+                            </button>
+                            {showQR && (
+                                <div className="mt-3">
+                                    <QRCodeGenerator
+                                        url={checkoutUrl}
+                                        filename={`${equipment.display_name}-checkout-qr.png`}
+                                    />
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </motion.div>
 

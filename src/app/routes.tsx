@@ -8,6 +8,8 @@ import { VehiclesListPage } from '@/modules/vehicles/pages/VehiclesListPage';
 import { VehiclesDetailPage } from '@/modules/vehicles/pages/VehiclesDetailPage';
 import { EquipmentPage } from '@/modules/equipment/pages/EquipmentPage';
 import { EquipmentDetailPage } from '@/modules/equipment/pages/EquipmentDetailPage';
+import { EquipmentCheckoutPage } from '@/modules/equipment/pages/EquipmentCheckoutPage';
+import { EquipmentCheckoutAckPage } from '@/modules/equipment/pages/EquipmentCheckoutAckPage';
 import { CalendarPage } from '@/modules/calendar/pages/CalendarPage';
 import { IncidentsPage } from '@/modules/incidents/pages/IncidentsPage';
 import { SettingsPage } from '@/modules/settings/pages/SettingsPage';
@@ -53,6 +55,8 @@ export const router = createBrowserRouter([
             { path: 'quick-report/:id', element: <QuickReportPage /> },
             { path: 'equipment', element: <EquipmentPage /> },
             { path: 'equipment/:id', element: <EquipmentDetailPage /> },
+            { path: 'equipment/checkout/:id', element: <EquipmentCheckoutPage /> },
+            { path: 'equipment/checkout/:id/ack', element: <EquipmentCheckoutAckPage /> },
             { path: 'calendar', element: <CalendarPage /> },
             { path: 'incidents', element: <IncidentsPage /> },
 

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import {
-    Wrench, Edit, Trash2, Shield, AlertCircle, ChevronRight
+    Wrench, Edit, Trash2, Shield, AlertCircle, ChevronRight, PackageOpen
 } from 'lucide-react';
 import { Equipment } from '../hooks/useEquipment';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ interface EquipmentCardProps {
     equipment: Equipment;
     onEdit?: (equipment: Equipment) => void;
     onDelete?: (id: string) => void;
+    checkoutUserName?: string | null;
 }
 
 const cardVariants = {
@@ -16,7 +17,7 @@ const cardVariants = {
     show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const } },
 }
 
-export function EquipmentCard({ equipment, onEdit, onDelete }: EquipmentCardProps) {
+export function EquipmentCard({ equipment, onEdit, onDelete, checkoutUserName }: EquipmentCardProps) {
     const navigate = useNavigate();
     const getValue = (key: string) => equipment.field_values?.[key];
 
@@ -122,10 +123,21 @@ export function EquipmentCard({ equipment, onEdit, onDelete }: EquipmentCardProp
             <div className="px-5 py-2.5 flex items-center justify-between border-t"
                 style={{ borderColor: 'rgba(90,110,95,0.10)', background: 'rgba(240,245,241,0.5)' }}>
                 <div className="flex items-center gap-1.5">
-                    <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${equipment.is_active ? 'bg-status-ok' : 'bg-status-critical'}`} />
-                    <span className="text-[11px] font-semibold text-muted-foreground">
-                        {equipment.is_active ? 'Aktív' : 'Inaktív'}
-                    </span>
+                    {checkoutUserName ? (
+                        <>
+                            <PackageOpen className="w-3 h-3 text-status-critical flex-shrink-0" />
+                            <span className="text-[11px] font-semibold text-status-critical truncate max-w-[110px]">
+                                {checkoutUserName}
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${equipment.is_active ? 'bg-status-ok' : 'bg-status-critical'}`} />
+                            <span className="text-[11px] font-semibold text-muted-foreground">
+                                {equipment.is_active ? 'Raktárban' : 'Inaktív'}
+                            </span>
+                        </>
+                    )}
                 </div>
                 <div className="flex items-center gap-1">
                     {equipment.responsible_user && (

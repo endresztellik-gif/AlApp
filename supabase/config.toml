@@ -1,4 +1,9 @@
 
+[functions.equipment-checkout-reminder]
+enabled = true
+verify_jwt = false
+entrypoint = "./functions/equipment-checkout-reminder/index.ts"
+
 [functions.invite-user]
 enabled = true
 verify_jwt = false
