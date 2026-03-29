@@ -944,7 +944,7 @@ Push → Lint + Semgrep → Unit tesztek → E2E tesztek → npm audit → Deplo
 - [ ] Káresemény QR-kóddal
 - [ ] "Egyéb" modul keretrendszer előkészítése
 - [ ] Netlify production deploy + saját domain (opcionális)
-- [ ] Felhasználói dokumentáció / használati útmutató
+- [x] Felhasználói dokumentáció / használati útmutató
 
 ---
 
@@ -1031,3 +1031,109 @@ Az AlApp egy moduláris, bővíthető PWA, amely:
 - **Természetes pasztell designnal** biztosítja a kellemes felhasználói élményt
 
 A fejlesztés lokálisan indul, fázisonkénti mérföldkövekkel, és az Antigravity + Claude Code + Gemini 2.5 Pro hármassal valósul meg.
+
+---
+
+## 23. Fejlesztési Napló
+
+### 2026-03-29 – Felhasználói Útmutató elkészítve
+
+**Elkészült:** `FELHASZNALOI_UTMUTATO.html`
+
+**Tartalom:**
+- 12 fejezet, teljes körű HTML dokumentáció böngészőből PDF-be nyomtathatóan (`@page { size: A4 }`)
+- 14 beágyazott képernyőkép (Playwright MCP-vel készítve localhost:5173-ról)
+
+**Képernyőképek (`docs/screenshots/`):**
+- `01_login.png` – Bejelentkezési oldal
+- `02_dashboard.png` – Dashboard / főoldal
+- `03_personnel.png` – Személy részletes adatlap
+- `04_personnel_list.png` – Személyek lista
+- `05_vehicles.png` – Járművek lista
+- `06_equipment_list.png` – Eszközök lista (Dji Mavic 3 kártyával)
+- `07_equipment_detail.png` – Eszköz részletes adatlap
+- `08_equipment_qr.png` – QR-kód az eszköz adatlapján
+- `09_equipment_checkout.png` – QR-kódos kölcsönzés oldala
+- `10_calendar.png` – Naptár havi nézet (valódi adatokkal)
+- `11_incidents.png` – Káresemények lista
+- `12_water_facilities.png` – Vízi Létesítmények lista
+- `13_reminders.png` – Emlékeztetők lista
+- `13b_reminders_new.png` – Új emlékeztető létrehozása dialóg
+
+**Javított/pontosított tartalom az előző verzióhoz képest:**
+- Navigáció javítva (Emlékeztetők hozzáadva, helyes sorrendben)
+- „Felszerelések" → „Eszközök" (az app valódi elnevezése)
+- „Incidensek" → „Káresemények" (az app valódi elnevezése)
+- Eszközök fejezet átírva: dinamikus mező rendszer leírása, statikus kategóriák eltávolítva
+- Vízi létesítmények leírás javítva: táblázatos nézet (Engedély száma, Hatóság, Érvényesség)
+- Új önálló fejezet: **10. Emlékeztetők** (push értesítés beállítás, értesítési időpontok)
+- Új alfejezet: **6.4 Eszköz QR-kódos Kölcsönzés** (kölcsönzési állapotok, admin lezárás)
+- PWA telepítési útmutató (1.4 fejezet)
+- GYIK bővítve (QR-kód, push értesítés, jogosultság témák)
+- Verzió: 1.1.0 / 2026. március 29.
+
+**Hiányzó képernyőképek (admin hozzáférés szükséges):**
+- Beállítások → Felhasználók (`/settings/users`)
+- Beállítások → Mező sémák (`/settings/field-schemas`)
+- Beállítások → Funkció kapcsolók (`/settings/feature-flags`)
+- Beállítások → Audit log (`/settings/audit-log`)
+- Szöveges leírás mindegyikhez elkészült.
+
+---
+
+### 2026-03-29 – Szerepkör átnevezés: `reader` → `vezető`
+
+**Motiváció:** A `reader` elnevezés félrevezető volt (szerkesztési jogai is vannak). Az egyeztetett új név: `vezető`.
+
+**Érintett fájlok:**
+- `supabase/migrations/20260329130000_rename_reader_to_vezeto.sql` — DB migráció:
+  - `user_profiles` CHECK constraint frissítve: `('user', 'vezető', 'admin')`
+  - Meglévő `reader` role-os userek `UPDATE`-elve `vezető`-re
+  - 20+ RLS policy: `reader_*` → `vezeto_*` (user_profiles, entities, field_values, photos, incidents, water_facilities, water_facility_photos, water_facility_documents, maintenance_logs, vehicle_checklists)
+  - `equipment_checkouts` UPDATE policy: `'manager'` → `'vezető'`
+  - Storage object policy-k (water_facility buckets): `admin_reader_*` → `admin_vezeto_*`
+- `src/shared/types/index.ts` — `UserRole`: `'reader'` → `'vezető'`
+- `src/core/permissions/usePermissions.ts` — 4× `role === 'reader'` → `'vezető'`
+- `src/modules/admin/hooks/useUsersAdmin.ts` — lokális `UserRole` típus
+- `src/modules/admin/pages/UsersPage.tsx` — `roleLabels`, dropdown, role tömb
+- `src/modules/personnel/components/PersonnelForm.tsx` — dropdown option
+- `src/modules/export/components/ExportModal.tsx` — `isAdminOrReader` ellenőrzés
+
+**Commit:** `2d7846b`
+
+---
+
+### 2026-03-29 – Mobil modal UX + Új típusok
+
+**Mobil UX javítás:**
+- `EquipmentForm`: `items-center` → `items-end lg:items-center` (bottom sheet mobilon)
+- Animáció: `scale` → `y: 48` csúszás
+- `max-h-[90dvh]` (dynamic viewport height iOS-kompatibilis)
+
+**Új típusok (DB + field_schemas):**
+- Járművek: `Motor`
+- Eszközök: `Áramfejlesztő`, `Fa vizsgáló - Fakopp`, `Magassági ágvágó`, `Gödörfúró`
+- Minden új eszköz típushoz standard field_schemas: széria szám, használatba vétel dátuma, leltárfelelős, megjegyzés
+
+**Commit:** `42408d9`
+
+---
+
+### 2026-03-29 – Jármű detail bug + Motor mezők + Modal háttér
+
+**Bug fix – "Nem található a keresett jármű":**
+- `VehiclesDetailPage`: a detail page `entities` táblát kérdezte, de járművek a dedikált `vehicles` táblában vannak
+- Javítás: `vehicles` tábla + közvetlen JSONB `field_values` + `field_schemas` külön query a mezőcímkékhez + `photos` direkt lekérdezés
+
+**Motor field sémák:**
+- `supabase/migrations/20260329150000_motor_field_schemas_and_vehicles_rls_vezeto.sql`
+- Motor típushoz hozzáadva: `license_plate` (kötelező), `registration_number`, `registration_expiry`, `inspection_expiry`
+- `vehicles` tábla RLS: `reader_insert/update_vehicles` → `vezeto_insert/update_vehicles`
+
+**Modal input háttér (desktop + mobil):**
+- `bg-background` (`#EBE8DC`) szinte azonos volt `bg-card` (`#FDFAF5`) — beviteli mezők alig látszottak
+- Javítás: `bg-white` mindkét formban (`VehicleForm` + `EquipmentForm`)
+- `VehicleForm` is megkapta a bottom sheet mobilos megjelenítést
+- Modal kártya háttér: `bg-card` → `bg-white`
+
+**Commit:** `0ef0418`
