@@ -86,12 +86,12 @@ export function EquipmentForm({ initialData, onSave, onCancel, isOpen }: Equipme
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:p-4 bg-black/60">
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl border border-border"
+                initial={{ opacity: 0, y: 48 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 48 }}
+                className="bg-card w-full lg:max-w-2xl max-h-[90dvh] overflow-y-auto rounded-t-2xl lg:rounded-2xl shadow-xl border border-border"
             >
                 <form onSubmit={handleSubmit}>
                     <div className="flex items-center justify-between p-5 border-b border-border/50 sticky top-0 bg-card z-10">
