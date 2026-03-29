@@ -1137,3 +1137,33 @@ A fejlesztés lokálisan indul, fázisonkénti mérföldkövekkel, és az Antigr
 - Modal kártya háttér: `bg-card` → `bg-white`
 
 **Commit:** `0ef0418`
+
+---
+
+### 2026-03-29 – Personnel INSERT bug, modal háttérszín, export javítás
+
+**Bug fix – Személyek felvitele sikertelen volt (admin sem tudott felvinni):**
+- **Gyökérok:** `personnel.intended_role` oszlopon CHECK constraint: `('user', 'reader', 'admin')`.
+  A form `'vezető'` értéket küldött (a reader→vezető átnevezés után), de `'vezető'` nem szerepelt az allowed értékek között → minden INSERT elutasítva DB szinten.
+- **Migráció:** `supabase/migrations/20260329160000_fix_personnel_intended_role_and_vezeto_rls.sql`
+  - CHECK constraint frissítve: `('user', 'vezető', 'admin')`
+  - Meglévő `'reader'` értékű rekordok UPDATE-elve `'vezető'`-re
+  - `reader_select_personnel`, `reader_insert_personnel`, `reader_update_personnel` policy-k → `vezeto_*` variánsokra cserélve (a 20260329130000 migráció ezeket kihagyta)
+
+**Modal háttérszín egységesítés:**
+- `PersonnelForm`: backdrop `bg-black/50 backdrop-blur-sm` → `bg-black/60`; kártya `bg-card` → `bg-white`
+- `PersonnelForm` megkapta a bottom sheet mobilos megjelenítést: `items-end lg:items-center`, `rounded-t-2xl lg:rounded-2xl`, `max-h-[90dvh]`
+- `ExportModal`: backdrop `backdrop-blur-sm` eltávolítva; kártya `bg-card` → `bg-white`
+
+**Bug fix – Adatok exportálása sikertelen volt:**
+- **Gyökérok:** Az export a régi `entities` + `field_values` EAV táblákból kérdezett le (2026-02-24 előtti schema). Ezek üresek, mert az adatok a dedikált `personnel`/`vehicles`/`equipment` táblákba lettek migrálva JSONB `field_values`-szal. Üres workbook → `XLSX.writeFile` kivételt dobott → "Hiba az exportálás során" toast.
+- **Javítás:** `ExportModal.handleExport` átírva:
+  - Dedikált táblákból kérdez (`TABLE_MAP`: `personnel`, `vehicles`, `equipment`)
+  - `field_schemas` alapján fejti ki a JSONB `field_values` mezőket emberi olvasható oszlopnevekre
+  - Ha valóban nincs adat: értelmes hibaüzenet (`'Nincs exportálható adat...'`) az általános hiba helyett
+  - Az RLS a dedikált táblákon már kezeli a jogosultságokat (felesleges `isAdminOrReader` logika eltávolítva)
+
+**Érintett fájlok:**
+- `supabase/migrations/20260329160000_fix_personnel_intended_role_and_vezeto_rls.sql` (új)
+- `src/modules/personnel/components/PersonnelForm.tsx` — backdrop + kártya bg + mobil layout
+- `src/modules/export/components/ExportModal.tsx` — backdrop + kártya bg + teljes export logika újraírva

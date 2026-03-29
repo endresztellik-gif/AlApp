@@ -63,85 +63,69 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         setIsExporting(true);
 
         try {
-            const { data: { user: authUser } } = await supabase.auth.getUser();
-            const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', authUser?.id).single();
-            const isAdminOrReader = profile?.role === 'admin' || profile?.role === 'vezető';
-
             const wb = XLSX.utils.book_new();
 
+            const TABLE_MAP: Record<ModuleType, string> = {
+                personnel: 'personnel',
+                vehicles: 'vehicles',
+                equipment: 'equipment',
+            };
+
             for (const mod of selectedModules) {
-                // 1. Fetch Entities
-                let query = supabase
-                    .from('entities')
-                    .select(`
-                        *,
-                        entity_type:entity_types(name),
-                        responsible:user_profiles(full_name)
-                    `)
-                    .eq('module', mod);
+                // 1. Fetch from dedicated table (RLS handles access control)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                let query = (supabase.from(TABLE_MAP[mod]) as any)
+                    .select(`*, entity_type:entity_types(id, name), responsible:user_profiles(full_name)`);
 
-                // If NOT admin/reader, filter by responsible_user_id
-                if (!isAdminOrReader && authUser) {
-                    query = query.eq('responsible_user_id', authUser.id);
-                }
-
-                // Filter by types if specific types are selected for this module
-
-                // Filter by types if specific types are selected for this module
                 const moduleSpecificTypeIds = Array.from(selectedTypeIds).filter(id => {
                     const t = entityTypes.find(et => et.id === id);
                     return t?.module === mod;
                 });
-
                 if (moduleSpecificTypeIds.length > 0) {
                     query = query.in('entity_type_id', moduleSpecificTypeIds);
                 }
 
-                const { data: entities, error } = await query;
+                const { data: records, error } = await query;
                 if (error) throw error;
-                if (!entities || entities.length === 0) continue;
+                if (!records || records.length === 0) continue;
 
-                // 2. Fetch Field Values
-                const entityIds = entities.map(e => e.id);
-                // Chunk IDs if too many, but for now assumption is dataset is manageable (<1000)
-                const { data: fieldValues } = await supabase
-                    .from('field_values')
-                    .select(`
-                        entity_id,
-                        value_text,
-                        value_date,
-                        value_json,
-                        field_schema:field_schemas(field_name, field_key)
-                    `)
-                    .in('entity_id', entityIds);
+                // 2. Fetch field schemas for these entity types
+                const entityTypeIds = [...new Set<string>(records.map((r: { entity_type_id: string }) => r.entity_type_id))];
+                const { data: schemas } = await supabase
+                    .from('field_schemas')
+                    .select('entity_type_id, field_key, field_name')
+                    .in('entity_type_id', entityTypeIds)
+                    .order('display_order');
 
-                // 3. Flatten Data
-                const flattenedData = entities.map(entity => {
+                // 3. Flatten: base fields + JSONB field_values
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const flattenedData = records.map((record: any) => {
                     const row: Record<string, unknown> = {
-                        Azonosító: entity.id,
-                        Név: entity.display_name,
-                        Típus: entity.entity_type?.name,
-                        'Felelős felhasználó': entity.responsible?.full_name,
-                        Státusz: entity.is_active ? 'Aktív' : 'Inaktív',
-                        Létrehozva: new Date(entity.created_at).toLocaleDateString('hu-HU')
+                        Azonosító: record.id,
+                        Név: record.display_name,
+                        Típus: record.entity_type?.name,
+                        'Felelős': record.responsible?.full_name,
+                        Státusz: record.is_active ? 'Aktív' : 'Inaktív',
+                        Létrehozva: new Date(record.created_at).toLocaleDateString('hu-HU'),
                     };
 
-                    // Merge dynamic fields
-                    const entityValues = fieldValues?.filter(fv => fv.entity_id === entity.id) || [];
-                    entityValues.forEach(fv => {
-                        // @ts-expect-error Supabase nested join type
-                        const fieldName = fv.field_schema?.field_name || 'Ismeretlen mező';
-                        const val = fv.value_text ?? fv.value_date ?? (fv.value_json ? JSON.stringify(fv.value_json) : '');
-                        row[fieldName] = val;
+                    const typeSchemas = schemas?.filter(s => s.entity_type_id === record.entity_type_id) || [];
+                    typeSchemas.forEach(schema => {
+                        row[schema.field_name] = record.field_values?.[schema.field_key] ?? '';
                     });
 
                     return row;
                 });
 
-                // 4. Add to Workbook
+                // 4. Add sheet
                 const ws = XLSX.utils.json_to_sheet(flattenedData);
                 const sheetName = MODULES.find(m => m.id === mod)?.label || mod;
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            }
+
+            if (wb.SheetNames.length === 0) {
+                toast.error('Nincs exportálható adat a kiválasztott modulokban.');
+                return;
             }
 
             // 5. Download
@@ -159,12 +143,12 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-card w-full max-w-lg rounded-2xl shadow-xl border border-border overflow-hidden"
+                className="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-border overflow-hidden"
             >
                 {/* Header */}
                 <div className="flex items-center justify-between p-5 border-b border-border/50 bg-muted/30">
