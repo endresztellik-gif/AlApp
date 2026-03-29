@@ -65,7 +65,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         try {
             const { data: { user: authUser } } = await supabase.auth.getUser();
             const { data: profile } = await supabase.from('user_profiles').select('role').eq('id', authUser?.id).single();
-            const isAdminOrReader = profile?.role === 'admin' || profile?.role === 'reader';
+            const isAdminOrReader = profile?.role === 'admin' || profile?.role === 'vezető';
 
             const wb = XLSX.utils.book_new();
 

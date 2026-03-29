@@ -151,7 +151,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                                 >
                                     <option value="">– nincs megadva –</option>
                                     <option value="user">Felhasználó (beosztott)</option>
-                                    <option value="reader">Olvasó/Szerkesztő (csoportvezető)</option>
+                                    <option value="vezető">Vezető</option>
                                     <option value="admin">Admin</option>
                                 </select>
                                 <p className="text-[11px] text-muted-foreground mt-1">

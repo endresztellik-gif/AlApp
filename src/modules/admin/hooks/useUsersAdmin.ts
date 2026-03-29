@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuditLogger } from './useAuditLogsAdmin';
 
-type UserRole = 'admin' | 'reader' | 'user';
+type UserRole = 'admin' | 'vezető' | 'user';
 
 interface UserRow {
     id: string;

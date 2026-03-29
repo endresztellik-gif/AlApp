@@ -51,19 +51,19 @@ export function usePermissions(): Permissions {
             // Adatok
             canViewOwnData: isAuthenticated,
             canEditOwnData: isAuthenticated,
-            canViewAllData: role === 'reader' || role === 'admin',
-            canEditAllData: role === 'admin', // Reader can edit own, DB enforces this
+            canViewAllData: role === 'vezető' || role === 'admin',
+            canEditAllData: role === 'admin', // Vezető can edit own, DB enforces this
             canDeleteAllData: role === 'admin',
             canManageSystem: role === 'admin',
 
             // Káresemények
             canCreateIncident: isAuthenticated,
-            canViewAllIncidents: role === 'reader' || role === 'admin', // User only sees own
+            canViewAllIncidents: role === 'vezető' || role === 'admin', // User only sees own
             canManageIncidents: role === 'admin', // Only admin can update/delete
 
             // Export
             canExportOwn: isAuthenticated,
-            canExportAll: role === 'reader' || role === 'admin',
+            canExportAll: role === 'vezető' || role === 'admin',
 
             // Admin
             canManageUsers: role === 'admin',
@@ -71,7 +71,7 @@ export function usePermissions(): Permissions {
             canManageFeatureFlags: role === 'admin',
 
             // Értesítések
-            canReceiveOwnNotifications: role === 'user' || role === 'reader' || role === 'admin',
+            canReceiveOwnNotifications: role === 'user' || role === 'vezető' || role === 'admin',
             canReceiveAllNotifications: role === 'admin',
 
             role,
