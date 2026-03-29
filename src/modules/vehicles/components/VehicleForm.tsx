@@ -97,15 +97,15 @@ export function VehicleForm({ initialData, onSave, onCancel, isOpen }: VehicleFo
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-end lg:items-center justify-center lg:p-4 bg-black/60">
             <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="bg-card w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl border border-border"
+                initial={{ opacity: 0, y: 48 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 48 }}
+                className="bg-white w-full lg:max-w-2xl max-h-[90dvh] overflow-y-auto rounded-t-2xl lg:rounded-2xl shadow-xl border border-border"
             >
                 <form onSubmit={handleSubmit}>
-                    <div className="flex items-center justify-between p-5 border-b border-border/50 sticky top-0 bg-card/95 backdrop-blur z-10">
+                    <div className="flex items-center justify-between p-5 border-b border-border/50 sticky top-0 bg-white z-10">
                         <h2 className="text-lg font-semibold text-foreground">
                             {initialData ? 'Jármű szerkesztése' : 'Új jármű felvétele'}
                         </h2>
@@ -123,7 +123,7 @@ export function VehicleForm({ initialData, onSave, onCancel, isOpen }: VehicleFo
                                     value={selectedTypeId || ''}
                                     onChange={(e) => setSelectedTypeId(e.target.value)}
                                     disabled={!!initialData || vehicleTypes.length <= 1}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+                                    className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:opacity-50"
                                     required
                                 >
                                     {vehicleTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -137,7 +137,7 @@ export function VehicleForm({ initialData, onSave, onCancel, isOpen }: VehicleFo
                                     required
                                     value={formData.display_name}
                                     onChange={(e) => setFormData(p => ({ ...p, display_name: e.target.value }))}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                                    className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                                     placeholder="Pl. ABC-123 vagy Piros Ford"
                                 />
                             </div>
@@ -147,7 +147,7 @@ export function VehicleForm({ initialData, onSave, onCancel, isOpen }: VehicleFo
                                 <select
                                     value={formData.responsible_user_id}
                                     onChange={(e) => setFormData(p => ({ ...p, responsible_user_id: e.target.value }))}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
                                 >
                                     <option value="">- Nincs kiválasztva -</option>
                                     {users.map(u => (

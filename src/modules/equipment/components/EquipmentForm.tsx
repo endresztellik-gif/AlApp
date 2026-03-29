@@ -91,7 +91,7 @@ export function EquipmentForm({ initialData, onSave, onCancel, isOpen }: Equipme
                 initial={{ opacity: 0, y: 48 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 48 }}
-                className="bg-card w-full lg:max-w-2xl max-h-[90dvh] overflow-y-auto rounded-t-2xl lg:rounded-2xl shadow-xl border border-border"
+                className="bg-white w-full lg:max-w-2xl max-h-[90dvh] overflow-y-auto rounded-t-2xl lg:rounded-2xl shadow-xl border border-border"
             >
                 <form onSubmit={handleSubmit}>
                     <div className="flex items-center justify-between p-5 border-b border-border/50 sticky top-0 bg-card z-10">
@@ -112,7 +112,7 @@ export function EquipmentForm({ initialData, onSave, onCancel, isOpen }: Equipme
                                     value={selectedTypeId || ''}
                                     onChange={(e) => setSelectedTypeId(e.target.value)}
                                     disabled={!!initialData || equipmentTypes.length <= 1}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+                                    className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm disabled:opacity-50"
                                     required
                                 >
                                     {equipmentTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -126,7 +126,7 @@ export function EquipmentForm({ initialData, onSave, onCancel, isOpen }: Equipme
                                     required
                                     value={formData.display_name}
                                     onChange={(e) => setFormData(p => ({ ...p, display_name: e.target.value }))}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                                    className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                                     placeholder="Pl. Husqvarna 550 XP"
                                 />
                             </div>
@@ -136,7 +136,7 @@ export function EquipmentForm({ initialData, onSave, onCancel, isOpen }: Equipme
                                 <select
                                     value={formData.responsible_user_id}
                                     onChange={(e) => setFormData(p => ({ ...p, responsible_user_id: e.target.value }))}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-input bg-white px-3 py-2 text-sm"
                                 >
                                     <option value="">- Nincs kiválasztva -</option>
                                     {users.map(u => (
