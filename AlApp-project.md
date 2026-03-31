@@ -1300,3 +1300,44 @@ Az `xlsx` vulnerabilitások csak speciálisan megkonstruált Excel fájlok feldo
 - `src/modules/export/components/ExportModal.tsx`
 - `src/shared/layouts/Sidebar.tsx`
 - `AlApp-project.md` (fejlesztési napló)
+
+---
+
+### Session: 2026-03-31 (este – personnel PATCH + hook)
+
+#### Personnel PATCH 400 – gyökérok azonosítás és végleges javítás
+
+**Probléma:** Személyes adatok szerkesztésekor `HTTP 400 / PostgreSQL 22P02: invalid input syntax for type uuid: ""` hiba.
+
+**Korábbi fix (c01c8bd) miért nem működött:**
+- A fix `PersonnelForm.tsx`-ben `responsible_user_id: formData.responsible_user_id || undefined` sort írt
+- A `PersonnelFormData` interface `responsible_user_id: string` (nem `string | undefined`)
+- TypeScript **TS2322** hibával bukott a Netlify build → a régi kód maradt élesben
+- Az SSD leállás miatt a Netlify build eredményét nem lehetett ellenőrizni → a bug látszólag megmaradt
+
+**Diagnózis menete:**
+- Supabase API logok → PATCH 400 megerősítve
+- PostgreSQL logok → `ERROR: invalid input syntax for type uuid: ""` – üres string kerül UUID mezőbe
+- Netlify build log → `src/modules/personnel/components/PersonnelForm.tsx(74,17): error TS2322` – build sikertelen volt
+
+**Végleges javítás (84b2d81):**
+- `PersonnelForm.tsx:74`: `responsible_user_id: formData.responsible_user_id || undefined` → `responsible_user_id: formData.responsible_user_id`
+- A `usePersonnel.ts` mutation `'' → null` konverziója (c01c8bd-ből) helyes volt, most tényleg lefut
+
+**Tanulság:** A TypeScript build hiba miatt a Netlify sosem deployolta a fixet – a bug látszólag visszatért, de valójában sosem ment ki.
+
+#### TypeScript pre-push hook – Claude Code automatizáció
+
+A visszatérő probléma megelőzésére (deploy sikertelenség észrevétlen marad) **Claude Code hook** beállítva:
+
+**`.claude/settings.local.json` – PreToolUse hook:**
+- Minden `git push` Bash parancs előtt `npx tsc -b --noEmit` fut
+- Ha TypeScript hiba → push **blokkolva** (`permissionDecision: "deny"`)
+- Ha tiszta → push folytatódik
+- Nem push parancsokra (commit, status, stb.) átengedi azonnal
+
+**Eredmény:** TypeScript hibás kód mostantól nem kerülhet ki a remote-ra anélkül, hogy Claude Code figyelmeztessen.
+
+**Érintett fájlok (2026-03-31 este):**
+- `src/modules/personnel/components/PersonnelForm.tsx`
+- `.claude/settings.local.json` (hook hozzáadva)
