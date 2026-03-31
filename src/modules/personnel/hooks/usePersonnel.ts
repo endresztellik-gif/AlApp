@@ -105,6 +105,17 @@ export function usePersonnel() {
                 Object.assign(payload, safeUpdates);
             }
 
+            // UUID mezők: üres string érvénytelen PostgreSQL-ben → null
+            for (const uuidField of ['responsible_user_id', 'user_id'] as const) {
+                if (uuidField in payload && payload[uuidField] === '') {
+                    payload[uuidField] = null;
+                }
+            }
+            // intended_role: üres string is érvénytelen a check constraint miatt
+            if ('intended_role' in payload && payload.intended_role === '') {
+                payload.intended_role = null;
+            }
+
             // 2. Field values update (merge into JSONB)
             if (fieldValues) {
                 // Get current field_values and merge with new ones
