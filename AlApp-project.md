@@ -1262,6 +1262,30 @@ A fejlesztés lokálisan indul, fázisonkénti mérföldkövekkel, és az Antigr
   - `flatted` → lockfile újragenerálással valószínűleg orvosolható
   - `xlsx` → SheetJS Pro vagy alternatív könyvtár megfontolandó hosszú távon
 
+#### Snyk security fix – 2026-03-31 (ugyanazon session)
+**Kiindulás:** 16 issue (1 critical, 13 high, 2 medium)
+
+**Elvégzett javítások:**
+- `npm update` → lockfile frissítve, tranzitív dependenciák frissültek:
+  - `flatted` 3.3.3 → 3.4.2 ✅ (critical Prototype Pollution javítva)
+  - `ajv` 6.12.6 → 6.14.0 ✅
+  - `minimatch` 3.1.2 → 3.1.5 ✅, 9.0.5 → 10.2.5 ✅
+  - `brace-expansion` 1.1.12 → 1.1.13 ✅
+  - `picomatch` 4.0.3 → 4.0.4 ✅
+  - `rollup` 4.57.1 → 4.60.1 ✅ (Directory Traversal javítva)
+  - `tar` 7.5.9 → 7.5.13 ✅ (Symlink Attack javítva)
+- `supabase` CLI frissítve: 2.76.10 → 2.84.5 ✅
+- `package.json` `overrides` bejegyzés: `serialize-javascript` forced → 7.0.5 ✅ (Arbitrary Code Injection javítva)
+
+**Eredmény: 16 → 2 issue**
+
+| Maradék issue | Ok |
+|---|---|
+| `xlsx` Prototype Pollution (medium) | Nincs community patch (SheetJS Pro kell) |
+| `xlsx` ReDoS (high) | Nincs community patch (SheetJS Pro kell) |
+
+Az `xlsx` vulnerabilitások csak speciálisan megkonstruált Excel fájlok feldolgozásakor aktiválódnak – mivel az app exportra (nem import/parse-ra) használja, a közvetlen kockázat alacsony. Hosszú távon SheetJS Pro vagy alternatív könyvtárra (pl. `exceljs`) érdemes migrálni.
+
 **Érintett fájlok (2026-03-31):**
 - `src/config/version.ts` (új)
 - `src/index.css`
