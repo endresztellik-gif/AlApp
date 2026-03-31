@@ -71,7 +71,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                 field_values: dynamicValues,
                 id: initialData?.id,
                 intended_role: formData.intended_role || null,
-                responsible_user_id: formData.responsible_user_id || undefined,
+                responsible_user_id: formData.responsible_user_id,
             });
             onCancel(); // Close on success
         } catch (error) {
