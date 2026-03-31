@@ -6,6 +6,7 @@ import { useMaintenance, MaintenanceLog } from '../hooks/useMaintenance';
 import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { useAuth } from '@/core/auth/useAuth';
+import { DatePickerField } from './DatePickerField';
 
 interface Props {
     entityId: string;
@@ -128,12 +129,12 @@ export function MaintenanceLogSection({ entityId }: Props) {
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Dátum</label>
-                                    <input
-                                        type="date"
-                                        required
+                                    <DatePickerField
                                         value={formData.date}
-                                        onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                        className="w-full px-3 py-2 rounded-xl border border-input bg-white text-[13px] focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all"
+                                        onChange={val => setFormData({ ...formData, date: val })}
+                                        required
+                                        startYear={new Date().getFullYear() - 5}
+                                        endYear={new Date().getFullYear()}
                                     />
                                 </div>
                             </div>
@@ -166,12 +167,12 @@ export function MaintenanceLogSection({ entityId }: Props) {
                                         <label className="block text-[11px] font-semibold text-status-ok uppercase tracking-wide mb-1.5 flex items-center gap-1">
                                             <RefreshCw className="w-3 h-3" /> Új Lejárati Dátum
                                         </label>
-                                        <input
-                                            type="date"
-                                            required
+                                        <DatePickerField
                                             value={formData.new_validity_date}
-                                            onChange={e => setFormData({ ...formData, new_validity_date: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50 text-[13px] focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
+                                            onChange={val => setFormData({ ...formData, new_validity_date: val })}
+                                            required
+                                            startYear={new Date().getFullYear()}
+                                            endYear={new Date().getFullYear() + 20}
                                         />
                                     </motion.div>
                                 )}

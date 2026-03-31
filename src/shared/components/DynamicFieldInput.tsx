@@ -46,12 +46,23 @@ export function DynamicFieldInput({ schema, value, onChange, error }: DynamicFie
                 );
 
             case 'date':
+                return (
+                    <DatePickerField
+                        value={value?.toString() || ''}
+                        onChange={onChange}
+                        required={schema.is_required}
+                        startYear={new Date().getFullYear() - 80}
+                        endYear={new Date().getFullYear()}
+                    />
+                );
             case 'date_expiry':
                 return (
                     <DatePickerField
                         value={value?.toString() || ''}
                         onChange={onChange}
                         required={schema.is_required}
+                        startYear={new Date().getFullYear() - 2}
+                        endYear={new Date().getFullYear() + 20}
                     />
                 );
 

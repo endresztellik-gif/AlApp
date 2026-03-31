@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Loader2, Save } from 'lucide-react';
 import { WaterFacility, WaterFacilityInput } from '../types';
+import { DatePickerField } from '@/shared/components/DatePickerField';
 
 interface WaterFacilityFormProps {
     initialData?: WaterFacility;
@@ -137,30 +138,26 @@ export function WaterFacilityForm({
                             <div className="hidden sm:block"></div>
 
                             <div>
-                                <label htmlFor="permit_issue_date" className="block text-xs font-medium text-gray-500 mb-1">
+                                <label className="block text-xs font-medium text-gray-500 mb-1">
                                     Engedély Kelte
                                 </label>
-                                <input
-                                    type="date"
-                                    id="permit_issue_date"
-                                    name="permit_issue_date"
+                                <DatePickerField
                                     value={formData.permit_issue_date || ''}
-                                    onChange={handleChange}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
+                                    onChange={val => setFormData(p => ({ ...p, permit_issue_date: val }))}
+                                    startYear={new Date().getFullYear() - 40}
+                                    endYear={new Date().getFullYear()}
                                 />
                             </div>
 
                             <div>
-                                <label htmlFor="permit_expiry_date" className="block text-xs font-medium text-gray-500 mb-1">
+                                <label className="block text-xs font-medium text-gray-500 mb-1">
                                     Engedély Érvényességi Ideje
                                 </label>
-                                <input
-                                    type="date"
-                                    id="permit_expiry_date"
-                                    name="permit_expiry_date"
+                                <DatePickerField
                                     value={formData.permit_expiry_date || ''}
-                                    onChange={handleChange}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all outline-none"
+                                    onChange={val => setFormData(p => ({ ...p, permit_expiry_date: val }))}
+                                    startYear={new Date().getFullYear() - 2}
+                                    endYear={new Date().getFullYear() + 30}
                                 />
                             </div>
 
