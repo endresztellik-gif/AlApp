@@ -19,6 +19,7 @@ import {
 import { useAuth } from '@/core/auth/useAuth'
 import { usePermissions } from '@/core/permissions/usePermissions'
 import { ExportModal } from '@/modules/export/components/ExportModal'
+import { APP_VERSION } from '@/config/version'
 
 interface SidebarProps {
     mobile?: boolean
@@ -239,6 +240,11 @@ export function Sidebar({ mobile, onClose }: SidebarProps) {
                     </div>
                     <span>{t('nav.logout')}</span>
                 </button>
+
+                {/* Version */}
+                <p className="text-center text-[10px] text-muted-foreground/50 pt-1 pb-0.5 select-none">
+                    AlApp {APP_VERSION}
+                </p>
             </div>
 
             <AnimatePresence>

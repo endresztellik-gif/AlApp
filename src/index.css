@@ -58,6 +58,10 @@
   --color-bg-secondary: #DCD9CD;
   --color-bg-card:      #FDFAF5;
 
+  /* Tailwind v4 utility aliasok (bg-background, bg-card) */
+  --color-background:   #EBE8DC;
+  --color-card:         #FDFAF5;
+
   /* Border radius */
   --radius-lg:  0.75rem;
   --radius-md:  0.5rem;

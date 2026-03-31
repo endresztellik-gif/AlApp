@@ -40,6 +40,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
     });
     const [dynamicValues, setDynamicValues] = useState<Record<string, unknown>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     useEffect(() => {
         if (initialData) {
@@ -62,6 +63,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
         if (!selectedTypeId) return;
 
         setIsSubmitting(true);
+        setSubmitError(null);
         try {
             await onSave({
                 ...formData,
@@ -73,7 +75,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
             onCancel(); // Close on success
         } catch (error) {
             console.error(error);
-            // Handle error (toast or alert)
+            setSubmitError('Mentés sikertelen. Kérjük, próbáld újra.');
         } finally {
             setIsSubmitting(false);
         }
@@ -109,7 +111,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                                     value={selectedTypeId || ''}
                                     onChange={(e) => setSelectedTypeId(e.target.value)}
                                     disabled={!!initialData || personnelTypes.length <= 1} // Disable if only 1 option or editing
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+                                    className="w-full rounded-lg border border-input bg-bg-card px-3 py-2 text-sm disabled:opacity-50"
                                     required
                                 >
                                     {personnelTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -123,7 +125,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                                     required
                                     value={formData.display_name}
                                     onChange={(e) => setFormData(p => ({ ...p, display_name: e.target.value }))}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+                                    className="w-full rounded-lg border border-input bg-bg-card px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
                                     placeholder="Teljes név"
                                 />
                             </div>
@@ -147,7 +149,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                                 <select
                                     value={formData.intended_role}
                                     onChange={(e) => setFormData(p => ({ ...p, intended_role: e.target.value }))}
-                                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                                    className="w-full rounded-lg border border-input bg-bg-card px-3 py-2 text-sm"
                                 >
                                     <option value="">– nincs megadva –</option>
                                     <option value="user">Felhasználó (beosztott)</option>
@@ -187,7 +189,11 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                         </div>
                     </div>
 
-                    <div className="p-5 border-t border-border/50 bg-muted/20 flex justify-end gap-3 rounded-b-2xl">
+                    <div className="p-5 border-t border-border/50 bg-muted/20 flex flex-col gap-3 rounded-b-2xl">
+                        {submitError && (
+                            <p className="text-sm text-red-600 text-center">{submitError}</p>
+                        )}
+                        <div className="flex justify-end gap-3">
                         <button
                             type="button"
                             onClick={onCancel}
@@ -203,6 +209,7 @@ export function PersonnelForm({ initialData, onSave, onCancel, isOpen }: Personn
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                             Mentés
                         </button>
+                        </div>
                     </div>
                 </form>
             </motion.div>

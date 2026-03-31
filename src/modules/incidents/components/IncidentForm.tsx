@@ -174,12 +174,12 @@ export function IncidentForm({ onSave, onCancel, isOpen }: IncidentFormProps) {
                                                     placeholder="Keresés név vagy típus alapján..."
                                                     value={searchQuery}
                                                     onChange={e => setSearchQuery(e.target.value)}
-                                                    className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-input bg-background focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
+                                                    className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-input bg-bg-card focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
                                                     autoFocus
                                                 />
                                             </div>
 
-                                            <div className="max-h-48 overflow-y-auto border border-input rounded-lg bg-background/50">
+                                            <div className="max-h-48 overflow-y-auto border border-input rounded-lg bg-bg-card">
                                                 {filteredEntities.length === 0 ? (
                                                     <div className="p-3 text-xs text-muted-foreground text-center">Nincs találat.</div>
                                                 ) : (
@@ -229,7 +229,7 @@ export function IncidentForm({ onSave, onCancel, isOpen }: IncidentFormProps) {
                                 required
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
-                                className="w-full min-h-[100px] rounded-lg border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none resize-none"
+                                className="w-full min-h-[100px] rounded-lg border border-input bg-bg-card px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none resize-none"
                                 placeholder="Írd le részletesen, mi történt, mi a hiba..."
                             />
                         </div>

@@ -16,7 +16,7 @@ interface DynamicFieldInputProps {
 }
 
 export function DynamicFieldInput({ schema, value, onChange, error }: DynamicFieldInputProps) {
-    const baseInputClasses = `w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all ${error ? 'border-status-critical focus:border-status-critical' : 'border-input focus:border-primary-500'
+    const baseInputClasses = `w-full rounded-lg border bg-bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 transition-all ${error ? 'border-status-critical focus:border-status-critical' : 'border-input focus:border-primary-500'
         }`;
 
     const renderInput = () => {

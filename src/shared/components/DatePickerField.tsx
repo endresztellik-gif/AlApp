@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { format, parse } from 'date-fns';
 import { hu } from 'date-fns/locale';
@@ -19,10 +19,26 @@ export function DatePickerField({
   className = ''
 }: DatePickerFieldProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [popupStyle, setPopupStyle] = useState<React.CSSProperties>({});
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   const selectedDate = value
     ? parse(value, 'yyyy-MM-dd', new Date())
     : undefined;
+
+  const handleToggle = () => {
+    if (!isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const popupHeight = 320;
+      if (spaceBelow < popupHeight) {
+        setPopupStyle({ position: 'fixed', bottom: window.innerHeight - rect.top + 4, left: rect.left });
+      } else {
+        setPopupStyle({ position: 'fixed', top: rect.bottom + 4, left: rect.left });
+      }
+    }
+    setIsOpen(prev => !prev);
+  };
 
   const handleDaySelect = (date: Date | undefined) => {
     if (date) {
@@ -36,17 +52,17 @@ export function DatePickerField({
     : '';
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} ref={triggerRef}>
       {/* Input field */}
       <div className="relative">
         <input
           type="text"
           value={displayValue}
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={handleToggle}
           placeholder="Válasszon dátumot"
           required={required}
           readOnly
-          className="w-full rounded-lg border border-input bg-background px-3 py-2 pr-10 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
+          className="w-full rounded-lg border border-input bg-bg-card px-3 py-2 pr-10 text-sm cursor-pointer focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none"
         />
         <Calendar className="absolute right-3 top-2.5 w-4 h-4 text-muted-foreground pointer-events-none" />
       </div>
@@ -56,12 +72,12 @@ export function DatePickerField({
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 z-40"
+            className="fixed inset-0 z-[100]"
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Calendar popup */}
-          <div className="absolute z-50 mt-2 bg-card rounded-xl shadow-xl border border-border p-3">
+          {/* Calendar popup – fixed so it escapes scrollable containers */}
+          <div className="z-[101] bg-bg-card rounded-xl shadow-xl border border-border p-3" style={popupStyle}>
             <DayPicker
               mode="single"
               selected={selectedDate}

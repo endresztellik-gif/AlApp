@@ -180,7 +180,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                                 `}>
                                     <div className={`
                                         w-5 h-5 rounded-md border flex items-center justify-center transition-colors
-                                        ${selectedModules.has(mod.id) ? 'bg-primary-500 border-primary-500' : 'border-muted-foreground/30 bg-background'}
+                                        ${selectedModules.has(mod.id) ? 'bg-primary-500 border-primary-500' : 'border-muted-foreground/30 bg-bg-card'}
                                     `}>
                                         {selectedModules.has(mod.id) && <Check className="w-3.5 h-3.5 text-white" />}
                                     </div>

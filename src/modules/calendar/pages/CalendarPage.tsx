@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar as BigCalendar, dateFnsLocalizer, View } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay, addDays, startOfDay, endOfDay, areIntervalsOverlapping } from 'date-fns';
+import { format, parse, startOfWeek, getDay, addDays, startOfDay, endOfDay, areIntervalsOverlapping, isSameDay } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { useCalendarEvents } from '../hooks/useCalendarEvents';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { RefreshCw, CalendarDays } from 'lucide-react';
+import { RefreshCw, CalendarDays, Clock, Sun } from 'lucide-react';
 
 const locales = {
     'hu': hu,
@@ -24,7 +24,21 @@ export function CalendarPage() {
     const [date, setDate] = useState(new Date());
     const { events, isLoading, refetch } = useCalendarEvents(date);
 
+    const today = new Date();
     const vacationEvents = events.filter(e => e.resource === 'vacation');
+
+    // Összes mai esemény (egész napos + időpontos)
+    const todayEvents = events.filter(e =>
+        areIntervalsOverlapping(
+            { start: e.start, end: e.allDay ? endOfDay(e.end) : e.end },
+            { start: startOfDay(today), end: endOfDay(today) }
+        )
+    ).sort((a, b) => {
+        // Egész naposak előre, aztán időpont szerint
+        if (a.allDay && !b.allDay) return -1;
+        if (!a.allDay && b.allDay) return 1;
+        return a.start.getTime() - b.start.getTime();
+    });
 
     return (
         <motion.div
@@ -238,7 +252,7 @@ export function CalendarPage() {
                 {/* Ma szabadságon */}
                 <LeaveSummaryCard
                     title="Ma szabadságon"
-                    date={new Date()}
+                    date={today}
                     events={vacationEvents}
                     emptyText="-"
                 />
@@ -246,10 +260,114 @@ export function CalendarPage() {
                 {/* Holnap szabadságon */}
                 <LeaveSummaryCard
                     title="Holnap szabadságon"
-                    date={addDays(new Date(), 1)}
+                    date={addDays(today, 1)}
                     events={vacationEvents}
                     emptyText="-"
                 />
+            </div>
+
+            {/* ── Mai összes bejegyzés ── */}
+            <TodayEventsCard events={todayEvents} date={today} />
+        </motion.div>
+    );
+}
+
+function TodayEventsCard({ events, date }: { events: { id: string; title: string; start: Date; end: Date; allDay?: boolean; resource?: string; location?: string }[], date: Date }) {
+    const eventColor = (resource?: string) => {
+        if (resource === 'vacation') return '#4A90D9';
+        if (resource === 'maintenance') return 'var(--color-status-urgent)';
+        return 'var(--color-primary-500)';
+    };
+
+    const formatTimeRange = (event: { start: Date; end: Date; allDay?: boolean }) => {
+        if (event.allDay) return null;
+        const startStr = format(event.start, 'HH:mm', { locale: hu });
+        // Ha az esemény nem ér át másnapra, kiírjuk a végét is
+        const endStr = isSameDay(event.start, event.end)
+            ? format(event.end, 'HH:mm', { locale: hu })
+            : null;
+        return endStr ? `${startStr} – ${endStr}` : `${startStr}`;
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="rounded-2xl overflow-hidden"
+            style={{
+                background: 'var(--color-bg-card)',
+                boxShadow: '0 1px 4px rgba(30,50,35,0.05), 0 0 0 1px rgba(90,110,95,0.10)',
+            }}
+        >
+            {/* Fejléc */}
+            <div className="px-5 py-3.5 border-b flex items-center justify-between"
+                style={{ borderColor: 'rgba(90,110,95,0.10)', background: 'rgba(240,245,241,0.4)' }}>
+                <div className="flex items-center gap-2">
+                    <CalendarDays className="w-4 h-4 text-primary-600" />
+                    <h2 className="text-[13.5px] font-semibold text-text-primary">
+                        Mai bejegyzések
+                    </h2>
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                        {format(date, 'yyyy. MMMM d.', { locale: hu })}
+                    </span>
+                </div>
+                {events.length > 0 && (
+                    <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-primary-100 text-primary-700">
+                        {events.length} db
+                    </span>
+                )}
+            </div>
+
+            <div className="p-4">
+                {events.length === 0 ? (
+                    <div className="flex items-center justify-center h-12">
+                        <span className="text-xl font-medium text-muted-foreground/40">–</span>
+                    </div>
+                ) : (
+                    <div className="space-y-2">
+                        {events.map((event, idx) => {
+                            const timeRange = formatTimeRange(event);
+                            return (
+                                <div
+                                    key={event.id ?? idx}
+                                    className="flex items-start gap-3 p-3 rounded-xl border border-border/40 bg-muted/10"
+                                >
+                                    {/* Szín-csík */}
+                                    <div
+                                        className="w-1 flex-shrink-0 rounded-full mt-0.5"
+                                        style={{ backgroundColor: eventColor(event.resource), minHeight: 36 }}
+                                    />
+
+                                    {/* Tartalom */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-[13.5px] font-semibold text-text-primary leading-snug">
+                                            {event.title}
+                                        </p>
+                                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                                            {event.allDay ? (
+                                                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                                                    <Sun className="w-3 h-3" />
+                                                    Egész nap
+                                                </span>
+                                            ) : timeRange && (
+                                                <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+                                                    <Clock className="w-3 h-3" />
+                                                    {timeRange}
+                                                </span>
+                                            )}
+                                            {event.location && (
+                                                <span className="text-[11px] text-muted-foreground truncate">
+                                                    📍 {event.location}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </motion.div>
     );

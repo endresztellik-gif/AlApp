@@ -202,7 +202,7 @@ export const SetupPasswordPage = () => {
                                     type={showPassword ? 'text' : 'password'}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
-                                    className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
+                                    className="h-11 w-full rounded-xl border border-border bg-bg-card pl-10 pr-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
                                     placeholder="Adja meg az új jelszavát"
                                     required
                                 />
@@ -296,7 +296,7 @@ export const SetupPasswordPage = () => {
                                     type={showConfirmPassword ? 'text' : 'password'}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
-                                    className="h-11 w-full rounded-xl border border-border bg-background pl-10 pr-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
+                                    className="h-11 w-full rounded-xl border border-border bg-bg-card pl-10 pr-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
                                     placeholder="Erősítse meg a jelszavát"
                                     required
                                 />

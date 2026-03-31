@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/core/auth/useAuth';
 import { Mail, Lock, ArrowRight, Loader2, Leaf } from 'lucide-react';
+import { APP_VERSION } from '@/config/version';
 
 /**
  * Bejelentkezési oldal – email/jelszó vagy Magic Link.
@@ -190,7 +191,7 @@ export const LoginPage = () => {
                                         type="email"
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}
-                                        className="h-11 w-full rounded-xl border border-border bg-background pl-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
+                                        className="h-11 w-full rounded-xl border border-border bg-bg-card pl-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
                                         placeholder={t('auth.email_placeholder')}
                                         required
                                     />
@@ -215,7 +216,7 @@ export const LoginPage = () => {
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="h-11 w-full rounded-xl border border-border bg-background pl-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
+                                            className="h-11 w-full rounded-xl border border-border bg-bg-card pl-10 text-[14px] transition-all focus:border-primary focus:ring-1 focus:ring-primary"
                                             placeholder={t('auth.password_placeholder')}
                                         />
                                     </div>
@@ -299,6 +300,11 @@ export const LoginPage = () => {
                             </button>
                         )}
                     </div>
+
+                    {/* Version */}
+                    <p className="mt-6 text-center text-[11px] text-muted-foreground/50 select-none">
+                        AlApp {APP_VERSION}
+                    </p>
                 </div>
             </motion.div>
         </div >

@@ -25,7 +25,7 @@ INSERT INTO entity_types (name, module)
 SELECT 'Gödörfúró', 'equipment'
 WHERE NOT EXISTS (SELECT 1 FROM entity_types WHERE name = 'Gödörfúró' AND module = 'equipment');
 
--- 3. Field schemas az új eszköz típusokhoz (serial_number, commission_date, inventory_responsible, description)
+-- 3. Field schemas az új eszköz típusokhoz
 DO $$
 DECLARE
     target_type RECORD;

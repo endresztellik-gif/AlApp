@@ -1167,3 +1167,112 @@ A fejlesztés lokálisan indul, fázisonkénti mérföldkövekkel, és az Antigr
 - `supabase/migrations/20260329160000_fix_personnel_intended_role_and_vezeto_rls.sql` (új)
 - `src/modules/personnel/components/PersonnelForm.tsx` — backdrop + kártya bg + mobil layout
 - `src/modules/export/components/ExportModal.tsx` — backdrop + kártya bg + teljes export logika újraírva
+
+---
+
+### 2026-03-30 – Kövesi Sándor hozzáférés javítás + migration history szinkronizálás
+
+**Bug fix – Kövesi Sándor (vezető) nem tudott semmilyen adatot felvinni:**
+- **Gyökérok:** A `20260329160000_fix_personnel_intended_role_and_vezeto_rls.sql` migráció sosem lett alkalmazva a produkciós Supabase-re (`supabase db push` kimaradt a tegnapi session végén). A production DB-ben a `reader_*` policy-k maradtak, amelyek `get_user_role() = 'reader'`-t ellenőriztek — de Kövesi role-ja már `'vezető'` volt → minden INSERT/SELECT blokkolt.
+- **Érintett táblák:** `personnel` (SELECT, INSERT, UPDATE), `equipment` (INSERT, UPDATE)
+- **Javítás (MCP-n keresztül közvetlenül production DB-re):**
+  - `fix_personnel_intended_role_and_vezeto_rls` migration alkalmazva → `reader_*` policy-k törölve, `vezeto_*` létrehozva
+  - `fix_equipment_reader_to_vezeto_rls` migration alkalmazva → `reader_insert_equipment`, `reader_update_equipment` törölve, `vezeto_*` létrehozva
+- **Snyk SAST scan:** 0 issue
+
+**Migration history szinkronizálás (local ↔ production drift):**
+- **Probléma:** A local `supabase/migrations/` fájlok verziószámai eltértek a production `supabase_migrations.schema_migrations` táblától — a 2026-03-29-es migrációk production-ben valós timestampekkel (pl. `20260329184950`) kerültek be, localban kerek számokkal (pl. `20260329130000`). `supabase db push` ütközéseket okozott volna.
+- **Javítás:**
+  - Hibás verziószámú local fájlok törölve (6 db)
+  - Helyes verziószámú fájlok létrehozva production SQL alapján (10 db)
+  - `20260326120000_personnel_user_link` és `20260326130000_add_intended_role_to_personnel` beírva a production migration history-ba (dashboard-on lettek alkalmazva, nyilvántartásból hiányoztak)
+  - Production-only migrációkhoz (`20260324201329`, `20260327202329`, `20260327203847`, `20260329080230`) local fájlok létrehozva a production `statements` alapján
+- **Eredmény:** `supabase db push` mostantól biztonságosan futtatható
+
+**Érintett fájlok/migrációk:**
+- `supabase/migrations/20260330063237_fix_personnel_intended_role_and_vezeto_rls.sql` (production verzió)
+- `supabase/migrations/20260330063245_fix_equipment_reader_to_vezeto_rls.sql` (production verzió)
+- +8 szinkronizált migration fájl a `supabase/migrations/` könyvtárban
+
+---
+
+### 2026-03-31 – Admin profil, UI javítások, naptár fix, v1.5 kiadás, Snyk scan
+
+#### Admin profil felvétele
+- `user_profiles` tábla: `full_name` javítva `"admin@admin.hu"` → `"Sztellik Endre"` (az admin fiók neve hibásan az email volt)
+- `personnel` tábla: új rekord létrehozva – **Sztellik Endre**, típus: Kormánytisztviselő, `intended_role: admin`, `user_id` összelinkelve az auth fiókkal
+- Korábban az admin felhasználónak nem volt személyi adatlapja a rendszerben
+
+#### Input mező átlátszóság javítás (bg-background bug)
+- **Gyökérok:** Tailwind v4-ben `bg-background` → `--color-background` CSS változót keres az `@theme` blokkban, ami **nem volt definiálva** → az inputok ténylegesen átlátszók voltak, modálban a fekete overlay átlátszott rajtuk
+- **Javítás:**
+  - `src/index.css`: `--color-background: #EBE8DC` és `--color-card: #FDFAF5` hozzáadva az `@theme` blokkhoz (oldal-szintű konténerekhez)
+  - `bg-background` → `bg-bg-card` lecserélve minden input mezőn:
+    - `src/shared/components/DynamicFieldInput.tsx` (baseInputClasses)
+    - `src/shared/components/DatePickerField.tsx`
+    - `src/modules/personnel/components/PersonnelForm.tsx` (3 mező)
+    - `src/modules/incidents/components/IncidentForm.tsx` (3 mező)
+    - `src/core/auth/LoginPage.tsx` (2 mező)
+    - `src/core/auth/SetupPasswordPage.tsx` (2 mező)
+    - `src/modules/export/components/ExportModal.tsx` (checkbox)
+
+#### DatePickerField popup pozícionálás javítás
+- **Probléma:** A naptárpopup `absolute` pozícióban volt a görgethetős modálon belül → scrollnál elúszott, és alatta lévő inputok mögé kerülhetett
+- **Javítás:** `DatePickerField.tsx` – popup `fixed` pozícióra állítva, `getBoundingClientRect()`-tel kiszámított koordinátákkal; okosan váltja fel/le irányát ha kevés hely van alul
+
+#### Google Calendar dátum-eltolás javítás
+- **Gyökérok 1 – JavaScript UTC parse:** `new Date("2026-04-01")` UTC-ben értelmez dátumot → CEST-ben (UTC+2) ez **március 31. 22:00** → react-big-calendar egy nappal korábbra helyezi az eseményt
+- **Gyökérok 2 – Google API exclusive end date:** Az API egész napos eseményeknél exclusive end datét ad vissza (pl. ápr. 1. eseménynél `end.date = "2026-04-02"`) → react-big-calendar inclusive end-ként értelmezi → egy nappal tovább jelenik meg
+- **Javítás:** `src/modules/calendar/hooks/useCalendarEvents.ts`
+  - `parseLocalDate()` helper: YYYY-MM-DD stringet helyi időként értelmez (nem UTC)
+  - Egész napos eseményeknél az end datéből 1 nap levonva (exclusive → inclusive konverzió)
+  - `CalendarEvent` interface kiegészítve: `allDay`, `description`, `location` mezőkkel
+  - `allDay` flag explicit módon átadva a visszatérő event objektumban
+
+#### Verziószám bevezetése (v1.5)
+- `src/config/version.ts`: central verzió konstans (`APP_VERSION = 'v1.5'`)
+- `Sidebar.tsx`: verzió megjelenik a logout gomb alatt (halvány, kis méret)
+- `LoginPage.tsx`: verzió megjelenik a bejelentkező kártya alján
+
+#### Mai bejegyzések kártya (Naptár modul)
+- Új `TodayEventsCard` komponens a `CalendarPage.tsx`-ben, a szabadság-összesítők alatt
+- Megmutatja az összes mai naptári bejegyzést (nem csak szabadságokat)
+- Egész napos esemény: ☀ „Egész nap" felirat
+- Időpontos esemény: 🕐 `HH:mm – HH:mm` helyi időben (a dátumfix figyelembevételével)
+- Helyszín (`location`) megjelenítése ha szerepel az eseményen
+- Szín-csík: kék=szabadság, narancs=karbantartás, zöld=egyéb
+- Rendezés: egész naposak előre, majd időpont szerint növekvő
+
+#### Snyk biztonsági vizsgálat – 2026-03-31
+- **SAST (forráskód statikus analízis):** ✅ **0 issue** – az alkalmazás kódja tiszta
+- **SCA (dependency vizsgálat):** 16 találat (mind közvetett/tranzitív függőség, leginkább build eszközök)
+
+| Súlyosság | Db | Érintett csomagok |
+|---|---|---|
+| Critical | 1 | `flatted@3.3.3` (Prototype Pollution – CVE-2026-33228) |
+| High | 13 | `ajv`, `brace-expansion`, `flatted`, `minimatch` (2×), `picomatch`, `rollup`, `serialize-javascript` (2×), `tar` (2×), `xlsx` |
+| Medium | 2 | `picomatch`, `xlsx` |
+
+**Megjegyzések:**
+- Az érintett csomagok **döntően build/dev tool tranzitív függőségek** (vite→rollup, supabase CLI→tar, webpack→ajv stb.) – a production bundle-t közvetlenül nem érintik
+- A `xlsx@0.18.5` (SheetJS) az egyetlen közvetlen production függőség érintett; nincs nyilvánosan elérhető javított verzió a community kiadásban
+- Ajánlott lépések (következő session):
+  - `rollup` → Vite frissítéssel orvosolható
+  - `tar` → `supabase` CLI frissítésével (`supabase@2.78.0+`) orvosolható
+  - `flatted` → lockfile újragenerálással valószínűleg orvosolható
+  - `xlsx` → SheetJS Pro vagy alternatív könyvtár megfontolandó hosszú távon
+
+**Érintett fájlok (2026-03-31):**
+- `src/config/version.ts` (új)
+- `src/index.css`
+- `src/shared/components/DynamicFieldInput.tsx`
+- `src/shared/components/DatePickerField.tsx`
+- `src/modules/calendar/hooks/useCalendarEvents.ts`
+- `src/modules/calendar/pages/CalendarPage.tsx`
+- `src/modules/personnel/components/PersonnelForm.tsx`
+- `src/modules/incidents/components/IncidentForm.tsx`
+- `src/core/auth/LoginPage.tsx`
+- `src/core/auth/SetupPasswordPage.tsx`
+- `src/modules/export/components/ExportModal.tsx`
+- `src/shared/layouts/Sidebar.tsx`
+- `AlApp-project.md` (fejlesztési napló)
