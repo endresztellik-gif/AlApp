@@ -243,78 +243,104 @@ serve(async (req) => {
 
         console.log(`Managers/admins: ${managerEmails.length}`);
 
-        // 2. Lejárati időablak: 90, 30, 0–10 nap
+        // 2. Lejárati mezők és küszöbök lekérése a field_schemas-ból
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        const maxDate = new Date(today);
-        maxDate.setDate(today.getDate() + 92);
 
-        const todayStr   = today.toISOString().split("T")[0];
-        const maxDateStr = maxDate.toISOString().split("T")[0];
-        console.log(`Checking expirations ${todayStr} → ${maxDateStr}`);
+        const { data: schemas, error: schemaError } = await supabase
+            .from("field_schemas")
+            .select("field_key, field_name, alert_days_warning, alert_days_urgent, alert_days_critical")
+            .not("alert_days_warning", "is", null)
+            .in("field_type", ["date_expiry", "date"]);
 
-        const { data: fieldValues, error: fvError } = await supabase
-            .from("field_values")
-            .select(`
-                id,
-                value_date,
-                entity:entities (
-                    id,
-                    display_name,
-                    module,
-                    responsible_user_id,
-                    responsible_profile:user_profiles!responsible_user_id(id, email, full_name),
-                    field_values (
-                        value_text,
-                        field_schemas (field_name)
-                    )
-                ),
-                schema:field_schemas (field_name)
-            `)
-            .gte("value_date", todayStr)
-            .lte("value_date", maxDateStr);
-
-        if (fvError) throw fvError;
-
-        if (!fieldValues || fieldValues.length === 0) {
-            console.log("No items in range.");
+        if (schemaError) throw schemaError;
+        if (!schemas || schemas.length === 0) {
             return new Response(
-                JSON.stringify({ message: "No items found", start: todayStr, end: maxDateStr }),
+                JSON.stringify({ message: "No field schemas with alerts" }),
                 { headers: { ...corsHeaders, "Content-Type": "application/json" } }
             );
         }
 
-        console.log(`${fieldValues.length} items found. Filtering by threshold...`);
+        // Deduplikálás field_key alapján
+        const schemaMap = new Map<string, { field_name: string; alert_days_warning: number; alert_days_urgent: number | null; alert_days_critical: number | null }>();
+        for (const s of schemas) {
+            if (!schemaMap.has(s.field_key)) {
+                schemaMap.set(s.field_key, {
+                    field_name: s.field_name,
+                    alert_days_warning: s.alert_days_warning,
+                    alert_days_urgent: s.alert_days_urgent,
+                    alert_days_critical: s.alert_days_critical,
+                });
+            }
+        }
 
-        // 3. Csak a threshold napokhoz tartozó tételek
+        // 3. Aktív rekordok lekérése mindhárom modulból
+        const [vehiclesRes, personnelRes, equipmentRes] = await Promise.all([
+            supabase.from("vehicles").select("id, display_name, field_values, responsible_user_id, responsible_profile:user_profiles!responsible_user_id(id, email, full_name)").eq("is_active", true),
+            supabase.from("personnel").select("id, display_name, field_values, responsible_user_id, responsible_profile:user_profiles!responsible_user_id(id, email, full_name)").eq("is_active", true),
+            supabase.from("equipment").select("id, display_name, field_values, responsible_user_id, responsible_profile:user_profiles!responsible_user_id(id, email, full_name)").eq("is_active", true),
+        ]);
+
+        type RecordRow = {
+            id: string;
+            display_name: string;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            field_values: Record<string, any>;
+            responsible_user_id: string | null;
+            responsible_profile: { id: string; email: string; full_name: string } | null;
+            module: string;
+        };
+
+        const allRecords: RecordRow[] = [
+            ...(vehiclesRes.data ?? []).map((r) => ({ ...r, module: "vehicles" })),
+            ...(personnelRes.data ?? []).map((r) => ({ ...r, module: "personnel" })),
+            ...(equipmentRes.data ?? []).map((r) => ({ ...r, module: "equipment" })),
+        ];
+
+        console.log(`Loaded ${allRecords.length} active records. Scanning for expiring fields...`);
+
+        // 4. Csak a threshold napokhoz tartozó tételek kiszűrése
         type EntityType = {
             id: string;
             display_name: string;
             module: string;
             responsible_user_id: string | null;
             responsible_profile: { id: string; email: string; full_name: string } | null;
-            field_values: { value_text: string; field_schemas: { field_name: string } | null }[];
         };
 
         const toAlert: { entity: EntityType; fieldName: string; diffDays: number; urgency: string }[] = [];
 
-        for (const item of fieldValues) {
-            const entity = item.entity as EntityType | null;
-            if (!entity) continue;
+        for (const record of allRecords) {
+            const fv = record.field_values || {};
+            for (const [fieldKey, schema] of schemaMap.entries()) {
+                const dateValue = fv[fieldKey];
+                if (!dateValue) continue;
 
-            const expiryDate = new Date(item.value_date);
-            expiryDate.setHours(0, 0, 0, 0);
-            const diffDays = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+                const expiryDate = new Date(String(dateValue));
+                if (isNaN(expiryDate.getTime())) continue;
+                expiryDate.setHours(0, 0, 0, 0);
 
-            const is90      = diffDays === 90;
-            const is30      = diffDays === 30;
-            const isCritical = diffDays <= 10 && diffDays >= 0;
-            if (!is90 && !is30 && !isCritical) continue;
+                const diffDays = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-            const fieldName = item.schema?.field_name || "Ismeretlen mező";
-            const urgency   = is90 ? "(Előzetes)" : is30 ? "(Figyelmeztetés)" : "❗ KRITIKUS";
+                const is90      = diffDays === 90;
+                const is30      = diffDays === 30;
+                const isCritical = diffDays <= 10 && diffDays >= 0;
+                if (!is90 && !is30 && !isCritical) continue;
 
-            toAlert.push({ entity, fieldName, diffDays, urgency });
+                const urgency = is90 ? "(Előzetes)" : is30 ? "(Figyelmeztetés)" : "❗ KRITIKUS";
+                toAlert.push({
+                    entity: {
+                        id: record.id,
+                        display_name: record.display_name,
+                        module: record.module,
+                        responsible_user_id: record.responsible_user_id,
+                        responsible_profile: record.responsible_profile,
+                    },
+                    fieldName: schema.field_name,
+                    diffDays,
+                    urgency,
+                });
+            }
         }
 
         console.log(`${toAlert.length} items to alert.`);
@@ -360,20 +386,10 @@ serve(async (req) => {
                 entity.module === "vehicles"  ? "Járművek"   :
                 entity.module === "equipment" ? "Eszközök"   : entity.module;
 
-            // Felelős email: responsible_profile vagy személyzeti email mező
-            let recipientEmail = entity.responsible_profile?.email ?? null;
-            let recipientName  = entity.responsible_profile?.full_name ?? null;
-            const responsibleId = entity.responsible_user_id;
-
-            if (!recipientEmail && Array.isArray(entity.field_values)) {
-                const emailField = entity.field_values.find(
-                    (fv) => fv.field_schemas?.field_name?.toLowerCase().includes("email") && fv.value_text
-                );
-                if (emailField) {
-                    recipientEmail = emailField.value_text;
-                    recipientName  = entity.display_name;
-                }
-            }
+            // Felelős email a responsible_profile-ból
+            const recipientEmail = entity.responsible_profile?.email ?? null;
+            const recipientName  = entity.responsible_profile?.full_name ?? null;
+            const responsibleId  = entity.responsible_user_id;
 
             const subject = `[LEJÁRAT] ${diffDays} nap: ${entity.display_name} – ${fieldName} ${urgency}`;
             const emailBody = `Kedves ${recipientName || "Felhasználó"}!
