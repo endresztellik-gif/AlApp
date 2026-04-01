@@ -139,7 +139,7 @@ export function PersonnelDetailPage() {
         setConfirmState(prev => ({ ...prev, open: false }));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleUpdate = (data: any) => {
+    const handleUpdate = async (data: any) => {
         openConfirm({
             variant: 'warning',
             title: 'Adatok mentése',

@@ -39,7 +39,7 @@ export const useWaterFacilities = () => {
                 action: 'create',
                 table_name: 'water_facilities',
                 record_id: result?.id,
-                new_values: variables as Record<string, unknown>,
+                new_values: variables as unknown as Record<string, unknown>,
             });
         },
     });

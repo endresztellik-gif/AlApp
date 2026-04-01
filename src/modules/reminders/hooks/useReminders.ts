@@ -98,7 +98,7 @@ export function useReminders() {
                 action: 'create',
                 table_name: 'personal_reminders',
                 record_id: result?.id,
-                new_values: variables as Record<string, unknown>,
+                new_values: variables as unknown as Record<string, unknown>,
             });
         },
     });
@@ -160,7 +160,7 @@ export function useReminders() {
                 action: 'update',
                 table_name: 'personal_reminders',
                 record_id: result?.id,
-                new_values: result as Record<string, unknown>,
+                new_values: result as unknown as Record<string, unknown>,
             });
         },
     });

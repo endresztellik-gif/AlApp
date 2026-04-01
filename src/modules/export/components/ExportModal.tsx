@@ -125,7 +125,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
 
                 // Columns from all keys
                 const allKeys = [...new Set(flattenedData.flatMap((r: Record<string, unknown>) => Object.keys(r)))];
-                worksheet.columns = allKeys.map(key => ({ header: key, key, width: 18 }));
+                worksheet.columns = allKeys.map(key => ({ header: key as string, key: key as string, width: 18 }));
 
                 // Add data rows
                 worksheet.addRows(flattenedData);
@@ -140,7 +140,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                 // Auto-fit column widths
                 worksheet.columns.forEach(col => {
                     let maxLen = String(col.header ?? '').length;
-                    col.eachCell({ includeEmpty: false }, cell => {
+                    col.eachCell?.({ includeEmpty: false }, cell => {
                         const len = cell.value ? String(cell.value).length : 0;
                         if (len > maxLen) maxLen = len;
                     });

@@ -35,7 +35,7 @@ export function WaterFacilityDetailPage() {
     const closeConfirm = () =>
         setConfirmState(prev => ({ ...prev, open: false }));
 
-    const handleUpdate = (data: WaterFacilityInput, file?: File) => {
+    const handleUpdate = async (data: WaterFacilityInput, file?: File) => {
         if (!id) return;
         openConfirm({
             variant: 'warning',
