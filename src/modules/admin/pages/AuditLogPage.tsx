@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuditLogs } from '../hooks/useAuditLogsAdmin';
+import { useAuditLogs, useAuditLogger } from '../hooks/useAuditLogsAdmin';
 import { useUsersAdmin } from '../hooks/useUsersAdmin';
+import { supabase } from '@/lib/supabase';
 import {
     Calendar,
     ChevronDown,
     ChevronUp,
     Activity,
     User,
+    Download,
+    Loader2,
 } from 'lucide-react';
 
 const actionConfig: Record<string, { bg: string; color: string; label: string }> = {
@@ -27,6 +30,8 @@ export function AuditLogPage() {
         endDate: '',
         page: 1,
     });
+    const [isExporting, setIsExporting] = useState(false);
+    const { mutate: log } = useAuditLogger();
 
     const { data, isLoading } = useAuditLogs({
         userId: filters.userId || undefined,
@@ -48,6 +53,60 @@ export function AuditLogPage() {
         setExpandedRows(prev =>
             prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
         );
+    };
+
+    const handleExport = async () => {
+        setIsExporting(true);
+        try {
+            let query = supabase
+                .from('audit_log')
+                .select('*, user:user_profiles(full_name, email)')
+                .order('created_at', { ascending: false })
+                .limit(10000);
+
+            if (filters.userId) query = query.eq('user_id', filters.userId);
+            if (filters.action) query = query.eq('action', filters.action);
+            if (filters.startDate) query = query.gte('created_at', new Date(filters.startDate).toISOString());
+            if (filters.endDate) {
+                const end = new Date(filters.endDate);
+                end.setHours(23, 59, 59, 999);
+                query = query.lte('created_at', end.toISOString());
+            }
+
+            const { data, error } = await query;
+            if (error) throw error;
+
+            const header = ['Időpont', 'Felhasználó', 'Email', 'Művelet', 'Tábla', 'Record ID', 'Régi érték', 'Új érték'];
+            const escape = (v: unknown) => {
+                const s = v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v);
+                return `"${s.replace(/"/g, '""')}"`;
+            };
+            const rows = (data ?? []).map((r: Record<string, unknown> & { user?: { full_name?: string; email?: string } }) => [
+                escape(new Date(r.created_at as string).toLocaleString('hu-HU')),
+                escape(r.user?.full_name ?? ''),
+                escape(r.user?.email ?? ''),
+                escape(r.action),
+                escape(r.table_name),
+                escape(r.record_id),
+                escape(r.old_values),
+                escape(r.new_values),
+            ].join(','));
+
+            const csv = [header.join(','), ...rows].join('\n');
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `audit_naplo_${new Date().toISOString().slice(0, 10).replace(/-/g, '')}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            log({ action: 'export', table_name: 'audit_log' });
+        } catch (err) {
+            console.error('Export failed', err);
+        } finally {
+            setIsExporting(false);
+        }
     };
 
     const inputStyle = {
@@ -115,11 +174,29 @@ export function AuditLogPage() {
                 </div>
 
                 {data && (
-                    <div className="relative flex items-center gap-5 shrink-0">
+                    <div className="relative flex items-center gap-4 shrink-0">
                         <div className="text-center hidden sm:block">
                             <div className="text-[22px] font-black text-white leading-none">{data.count}</div>
                             <div className="text-[9px] font-semibold text-white/40 uppercase tracking-wide mt-0.5">bejegyzés</div>
                         </div>
+                        <motion.button
+                            whileHover={{ y: -1 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={handleExport}
+                            disabled={isExporting}
+                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[12.5px] font-semibold transition-all disabled:opacity-50"
+                            style={{
+                                background: 'rgba(255,255,255,0.12)',
+                                border: '1px solid rgba(255,255,255,0.18)',
+                                color: '#fff',
+                            }}
+                        >
+                            {isExporting
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                : <Download className="w-3.5 h-3.5" />
+                            }
+                            <span className="hidden sm:inline">CSV export</span>
+                        </motion.button>
                     </div>
                 )}
             </motion.div>

@@ -83,18 +83,26 @@ export function usePersonnel() {
             if (error) throw error;
             return data;
         },
-        onSuccess: (_, variables) => {
+        onSuccess: (result, variables) => {
             queryClient.invalidateQueries({ queryKey: ['personnel'] });
             log({
-                action: 'create_personnel',
+                action: 'create',
                 table_name: 'personnel',
-                new_values: variables
+                record_id: result?.id,
+                new_values: variables as Record<string, unknown>,
             });
         },
     });
 
     const updateMutation = useMutation({
         mutationFn: async ({ id, updates, fieldValues }: { id: string; updates?: Partial<Personnel>; fieldValues?: Record<string, unknown> }) => {
+            // Fetch current record for old_values audit trail
+            const { data: currentRecord } = await supabase
+                .from('personnel')
+                .select('*')
+                .eq('id', id)
+                .single();
+
             // Prepare update payload
             const payload: Record<string, unknown> = {};
 
@@ -118,15 +126,8 @@ export function usePersonnel() {
 
             // 2. Field values update (merge into JSONB)
             if (fieldValues) {
-                // Get current field_values and merge with new ones
-                const { data: current } = await supabase
-                    .from('personnel')
-                    .select('field_values')
-                    .eq('id', id)
-                    .single();
-
                 payload.field_values = {
-                    ...(current?.field_values || {}),
+                    ...(currentRecord?.field_values || {}),
                     ...fieldValues
                 };
             }
@@ -138,14 +139,16 @@ export function usePersonnel() {
                 .eq('id', id);
 
             if (error) throw error;
+            return { id, payload, oldRecord: currentRecord };
         },
-        onSuccess: (_, variables) => {
+        onSuccess: (result) => {
             queryClient.invalidateQueries({ queryKey: ['personnel'] });
             log({
-                action: 'update_personnel',
+                action: 'update',
                 table_name: 'personnel',
-                record_id: variables.id,
-                new_values: variables
+                record_id: result.id,
+                old_values: result.oldRecord as Record<string, unknown>,
+                new_values: result.payload,
             });
         }
     });
@@ -158,9 +161,9 @@ export function usePersonnel() {
         onSuccess: (_, id) => {
             queryClient.invalidateQueries({ queryKey: ['personnel'] });
             log({
-                action: 'delete_personnel',
+                action: 'delete',
                 table_name: 'personnel',
-                record_id: id
+                record_id: id,
             });
         }
     })

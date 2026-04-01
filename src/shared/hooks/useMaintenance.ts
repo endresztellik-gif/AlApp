@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { useAuditLogger } from '@/modules/admin/hooks/useAuditLogsAdmin';
 
 export interface MaintenanceLog {
     id: string;
@@ -16,6 +17,7 @@ export interface MaintenanceLog {
 
 export function useMaintenance(entityId: string) {
     const queryClient = useQueryClient();
+    const { mutate: log } = useAuditLogger();
 
     const fetchLogs = async (): Promise<MaintenanceLog[]> => {
         const { data, error } = await supabase
@@ -48,11 +50,16 @@ export function useMaintenance(entityId: string) {
             if (error) throw error;
             return data;
         },
-        onSuccess: () => {
+        onSuccess: (result, variables) => {
             queryClient.invalidateQueries({ queryKey: ['maintenance', entityId] });
-            // Invalidate vehicle details as well, because validity date might have changed
             queryClient.invalidateQueries({ queryKey: ['vehicles', entityId] });
             queryClient.invalidateQueries({ queryKey: ['equipment', entityId] });
+            log({
+                action: 'create',
+                table_name: 'maintenance_logs',
+                record_id: result?.id,
+                new_values: variables as Record<string, unknown>,
+            });
         },
     });
 
@@ -65,8 +72,13 @@ export function useMaintenance(entityId: string) {
 
             if (error) throw error;
         },
-        onSuccess: () => {
+        onSuccess: (_, id) => {
             queryClient.invalidateQueries({ queryKey: ['maintenance', entityId] });
+            log({
+                action: 'delete',
+                table_name: 'maintenance_logs',
+                record_id: id,
+            });
         },
     });
 

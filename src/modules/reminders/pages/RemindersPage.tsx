@@ -7,6 +7,7 @@ import type { Reminder } from '../hooks/useReminders';
 import { ReminderCard } from '../components/ReminderCard';
 import { ReminderForm } from '../components/ReminderForm';
 import { PushSubscriptionManager } from '../components/PushSubscriptionManager';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 
 function RemindersSkeleton() {
     return (
@@ -44,6 +45,7 @@ export function RemindersPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingReminder, setEditingReminder] = useState<Reminder | null>(null);
     const [showDone, setShowDone] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: string | null }>({ open: false, id: null });
 
     const handleToggleDone = async (id: string, is_done: boolean) => {
         try {
@@ -54,9 +56,15 @@ export function RemindersPage() {
         }
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = (id: string) => {
+        setDeleteConfirm({ open: true, id });
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteConfirm.id) return;
+        setDeleteConfirm({ open: false, id: null });
         try {
-            await remove(id);
+            await remove(deleteConfirm.id);
             toast.success('Emlékeztető törölve');
         } catch {
             toast.error('Törlés sikertelen');
@@ -255,6 +263,16 @@ export function RemindersPage() {
                     onClose={() => setEditingReminder(null)}
                 />
             )}
+
+            <ConfirmDialog
+                isOpen={deleteConfirm.open}
+                variant="destructive"
+                title="Emlékeztető törlése"
+                description="Biztosan törlöd ezt az emlékeztetőt?"
+                confirmLabel="Törlés"
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteConfirm({ open: false, id: null })}
+            />
         </div>
     );
 }

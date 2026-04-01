@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { usePersonnel } from '../hooks/usePersonnel';
 import { usePermissions } from '@/core/permissions/usePermissions';
 import { PersonnelForm } from '../components/PersonnelForm';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 
 /* Avatar szín ugyanaz mint a kártyán */
 function avatarColor(name: string) {
@@ -40,6 +41,14 @@ export function PersonnelDetailPage() {
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [selectedUserId, setSelectedUserId] = useState<string>('');
     const [isLinking, setIsLinking] = useState(false);
+    const [confirmState, setConfirmState] = useState<{
+        open: boolean;
+        variant: 'destructive' | 'warning';
+        title: string;
+        description?: string;
+        confirmLabel?: string;
+        onConfirm: () => void;
+    }>({ open: false, variant: 'destructive', title: '', onConfirm: () => {} });
 
     // Személy adatainak lekérdezése a personnel táblából
     const { data: person, isLoading, refetch } = useQuery({
@@ -124,17 +133,38 @@ export function PersonnelDetailPage() {
         );
     }
 
+    const openConfirm = (cfg: Omit<typeof confirmState, 'open'>) =>
+        setConfirmState({ ...cfg, open: true });
+    const closeConfirm = () =>
+        setConfirmState(prev => ({ ...prev, open: false }));
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleUpdate = async (data: any) => {
-        await update({ id: person.id, updates: data, fieldValues: data.field_values });
-        refetch();
+    const handleUpdate = (data: any) => {
+        openConfirm({
+            variant: 'warning',
+            title: 'Adatok mentése',
+            description: `Biztosan mented a(z) „${person.display_name}" személy adatait?`,
+            confirmLabel: 'Mentés',
+            onConfirm: async () => {
+                closeConfirm();
+                await update({ id: person.id, updates: data, fieldValues: data.field_values });
+                refetch();
+            },
+        });
     };
 
-    const handleDelete = async () => {
-        if (confirm('Biztosan törölni szeretnéd?')) {
-            await remove(person.id);
-            navigate('/personnel');
-        }
+    const handleDelete = () => {
+        openConfirm({
+            variant: 'destructive',
+            title: 'Személy törlése',
+            description: `„${person.display_name}" törlése visszafordíthatatlan. Biztosan folytatod?`,
+            confirmLabel: 'Törlés',
+            onConfirm: async () => {
+                closeConfirm();
+                await remove(person.id);
+                navigate('/personnel');
+            },
+        });
     };
 
     const handleLinkUser = async () => {
@@ -152,18 +182,26 @@ export function PersonnelDetailPage() {
         }
     };
 
-    const handleUnlinkUser = async () => {
-        if (!confirm('Biztosan megszünteted a fiókhoz való kapcsolatot?')) return;
-        setIsLinking(true);
-        try {
-            await linkUser({ personnelId: person.id, userId: null });
-            toast.success('Kapcsolat megszüntetve.');
-            refetch();
-        } catch {
-            toast.error('Hiba a kapcsolat megszüntetése során.');
-        } finally {
-            setIsLinking(false);
-        }
+    const handleUnlinkUser = () => {
+        openConfirm({
+            variant: 'destructive',
+            title: 'Fiókkapcsolat megszüntetése',
+            description: 'Biztosan megszünteted a felhasználói fiókhoz való kapcsolatot?',
+            confirmLabel: 'Megszüntetem',
+            onConfirm: async () => {
+                closeConfirm();
+                setIsLinking(true);
+                try {
+                    await linkUser({ personnelId: person.id, userId: null });
+                    toast.success('Kapcsolat megszüntetve.');
+                    refetch();
+                } catch {
+                    toast.error('Hiba a kapcsolat megszüntetése során.');
+                } finally {
+                    setIsLinking(false);
+                }
+            },
+        });
     };
 
     const getLabel = (key: string) =>
@@ -446,6 +484,16 @@ export function PersonnelDetailPage() {
                     />
                 )}
             </AnimatePresence>
+
+            <ConfirmDialog
+                isOpen={confirmState.open}
+                variant={confirmState.variant}
+                title={confirmState.title}
+                description={confirmState.description}
+                confirmLabel={confirmState.confirmLabel}
+                onConfirm={confirmState.onConfirm}
+                onCancel={closeConfirm}
+            />
         </motion.div>
     );
 }

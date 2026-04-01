@@ -5,7 +5,7 @@ import { useAuditLogger } from '@/modules/admin/hooks/useAuditLogsAdmin';
 export interface Vehicle {
     id: string;
     entity_type_id: string;
-    display_name: string; // Used for license plate or general name
+    display_name: string;
     is_active: boolean;
     created_at: string;
     created_by?: string;
@@ -27,7 +27,6 @@ export function useVehicles() {
     const { mutate: log } = useAuditLogger();
 
     const fetchVehicles = async () => {
-        // Single query to vehicles table (JSONB field_values)
         const { data, error } = await supabase
             .from('vehicles')
             .select(`
@@ -39,7 +38,6 @@ export function useVehicles() {
 
         if (error) throw error;
 
-        // Parse JSONB field_values (already in correct format)
         return (data || []).map(v => ({
             ...v,
             field_values: v.field_values || {}
@@ -58,14 +56,13 @@ export function useVehicles() {
             field_values: Record<string, unknown>;
             responsible_user_id?: string;
         }) => {
-            // Direct JSONB insert - much simpler!
             const { data, error } = await supabase
                 .from('vehicles')
                 .insert({
                     entity_type_id: newVehicle.entity_type_id,
                     display_name: newVehicle.display_name,
                     responsible_user_id: newVehicle.responsible_user_id,
-                    field_values: newVehicle.field_values // JSONB direct insert
+                    field_values: newVehicle.field_values
                 })
                 .select()
                 .single();
@@ -73,58 +70,57 @@ export function useVehicles() {
             if (error) throw error;
             return data;
         },
-        onSuccess: (_, variables) => {
+        onSuccess: (result, variables) => {
             queryClient.invalidateQueries({ queryKey: ['vehicles'] });
             log({
-                action: 'create_vehicle',
+                action: 'create',
                 table_name: 'vehicles',
-                new_values: variables
+                record_id: result?.id,
+                new_values: variables as Record<string, unknown>,
             });
         },
     });
 
     const updateMutation = useMutation({
         mutationFn: async ({ id, updates, fieldValues }: { id: string; updates?: Partial<Vehicle>; fieldValues?: Record<string, unknown> }) => {
-            // Prepare update payload
+            // Fetch current record for old_values audit trail
+            const { data: currentRecord } = await supabase
+                .from('vehicles')
+                .select('*')
+                .eq('id', id)
+                .single();
+
             const payload: Record<string, unknown> = {};
 
-            // 1. Basic fields update (remove readonly fields)
             if (updates) {
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
                 const { entity_type, field_values, responsible_user, photos, created_by, ...safeUpdates } = updates as any;
                 Object.assign(payload, safeUpdates);
             }
 
-            // 2. Field values update (merge into JSONB)
             if (fieldValues) {
-                // Get current field_values and merge with new ones
-                const { data: current } = await supabase
-                    .from('vehicles')
-                    .select('field_values')
-                    .eq('id', id)
-                    .single();
-
                 payload.field_values = {
-                    ...(current?.field_values || {}),
+                    ...(currentRecord?.field_values || {}),
                     ...fieldValues
                 };
             }
 
-            // Execute single update
             const { error } = await supabase
                 .from('vehicles')
                 .update(payload)
                 .eq('id', id);
 
             if (error) throw error;
+            return { id, payload, oldRecord: currentRecord };
         },
-        onSuccess: (_, variables) => {
+        onSuccess: (result) => {
             queryClient.invalidateQueries({ queryKey: ['vehicles'] });
             log({
-                action: 'update_vehicle',
+                action: 'update',
                 table_name: 'vehicles',
-                record_id: variables.id,
-                new_values: variables
+                record_id: result.id,
+                old_values: result.oldRecord as Record<string, unknown>,
+                new_values: result.payload,
             });
         }
     });
@@ -137,12 +133,12 @@ export function useVehicles() {
         onSuccess: (_, id) => {
             queryClient.invalidateQueries({ queryKey: ['vehicles'] });
             log({
-                action: 'delete_vehicle',
+                action: 'delete',
                 table_name: 'vehicles',
-                record_id: id
+                record_id: id,
             });
         }
-    })
+    });
 
     return {
         vehicles,

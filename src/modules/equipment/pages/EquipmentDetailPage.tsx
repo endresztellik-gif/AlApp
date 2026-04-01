@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { hu } from 'date-fns/locale';
 import { QRCodeGenerator } from '@/shared/components/QRCodeGenerator';
 import { useEquipmentCheckout } from '../hooks/useEquipmentCheckout';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 
 /* Részlap skeleton */
 function DetailSkeleton() {
@@ -36,6 +37,18 @@ export function EquipmentDetailPage() {
     const { update, remove } = useEquipment();
     const [isEditOpen, setIsEditOpen] = useState(false);
     const [showQR, setShowQR] = useState(false);
+    const [confirmState, setConfirmState] = useState<{
+        open: boolean;
+        variant: 'destructive' | 'warning';
+        title: string;
+        description?: string;
+        confirmLabel?: string;
+        onConfirm: () => void;
+    }>({ open: false, variant: 'destructive', title: '', onConfirm: () => {} });
+    const openConfirm = (cfg: Omit<typeof confirmState, 'open'>) =>
+        setConfirmState({ ...cfg, open: true });
+    const closeConfirm = () =>
+        setConfirmState(prev => ({ ...prev, open: false }));
     const { activeCheckout } = useEquipmentCheckout(id!);
     const checkoutUrl = `${window.location.origin}/equipment/checkout/${id}`;
 
@@ -94,20 +107,32 @@ export function EquipmentDetailPage() {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const handleUpdate = async (data: any) => {
-        await update({
-            id: equipment.id,
-            updates: data,
-            fieldValues: data.field_values
+    const handleUpdate = (data: any) => {
+        openConfirm({
+            variant: 'warning',
+            title: 'Adatok mentése',
+            description: `Biztosan mented a(z) „${equipment.display_name}" eszköz adatait?`,
+            confirmLabel: 'Mentés',
+            onConfirm: async () => {
+                closeConfirm();
+                await update({ id: equipment.id, updates: data, fieldValues: data.field_values });
+                refetch();
+            },
         });
-        refetch();
     };
 
-    const handleDelete = async () => {
-        if (confirm("Biztosan törölni szeretnéd?")) {
-            await remove(equipment.id);
-            navigate('/equipment');
-        }
+    const handleDelete = () => {
+        openConfirm({
+            variant: 'destructive',
+            title: 'Eszköz törlése',
+            description: `„${equipment.display_name}" törlése visszafordíthatatlan. Biztosan folytatod?`,
+            confirmLabel: 'Törlés',
+            onConfirm: async () => {
+                closeConfirm();
+                await remove(equipment.id);
+                navigate('/equipment');
+            },
+        });
     };
 
     const getLabel = (key: string) => equipment._schemaMap?.[key]?.field_name || key;
@@ -374,6 +399,16 @@ export function EquipmentDetailPage() {
                     />
                 )}
             </AnimatePresence>
+
+            <ConfirmDialog
+                isOpen={confirmState.open}
+                variant={confirmState.variant}
+                title={confirmState.title}
+                description={confirmState.description}
+                confirmLabel={confirmState.confirmLabel}
+                onConfirm={confirmState.onConfirm}
+                onCancel={closeConfirm}
+            />
         </motion.div >
     );
 }

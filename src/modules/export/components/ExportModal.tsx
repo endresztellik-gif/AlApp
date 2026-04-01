@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { X, FileSpreadsheet, Download, Loader2, Check } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { supabase } from '@/lib/supabase';
 import { useEntityTypesAdmin } from '@/modules/admin/hooks/useFieldSchemasAdmin';
 import { ModuleType } from '@/shared/types';
@@ -63,7 +63,9 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
         setIsExporting(true);
 
         try {
-            const wb = XLSX.utils.book_new();
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'AlApp';
+            workbook.created = new Date();
 
             const TABLE_MAP: Record<ModuleType, string> = {
                 personnel: 'personnel',
@@ -71,8 +73,10 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                 equipment: 'equipment',
             };
 
+            let totalSheets = 0;
+
             for (const mod of selectedModules) {
-                // 1. Fetch from dedicated table (RLS handles access control)
+                // 1. Fetch records
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 let query = (supabase.from(TABLE_MAP[mod]) as any)
                     .select(`*, entity_type:entity_types(id, name), responsible:user_profiles(full_name)`);
@@ -89,7 +93,7 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                 if (error) throw error;
                 if (!records || records.length === 0) continue;
 
-                // 2. Fetch field schemas for these entity types
+                // 2. Fetch field schemas
                 const entityTypeIds = [...new Set<string>(records.map((r: { entity_type_id: string }) => r.entity_type_id))];
                 const { data: schemas } = await supabase
                     .from('field_schemas')
@@ -97,39 +101,89 @@ export function ExportModal({ isOpen, onClose }: ExportModalProps) {
                     .in('entity_type_id', entityTypeIds)
                     .order('display_order');
 
-                // 3. Flatten: base fields + JSONB field_values
+                // 3. Flatten records
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const flattenedData = records.map((record: any) => {
                     const row: Record<string, unknown> = {
-                        Azonosító: record.id,
-                        Név: record.display_name,
-                        Típus: record.entity_type?.name,
-                        'Felelős': record.responsible?.full_name,
-                        Státusz: record.is_active ? 'Aktív' : 'Inaktív',
-                        Létrehozva: new Date(record.created_at).toLocaleDateString('hu-HU'),
+                        'Azonosító': record.id,
+                        'Név': record.display_name,
+                        'Típus': record.entity_type?.name ?? '',
+                        'Felelős': record.responsible?.full_name ?? '',
+                        'Státusz': record.is_active ? 'Aktív' : 'Inaktív',
+                        'Létrehozva': new Date(record.created_at).toLocaleDateString('hu-HU'),
                     };
-
-                    const typeSchemas = schemas?.filter(s => s.entity_type_id === record.entity_type_id) || [];
+                    const typeSchemas = schemas?.filter(s => s.entity_type_id === record.entity_type_id) ?? [];
                     typeSchemas.forEach(schema => {
                         row[schema.field_name] = record.field_values?.[schema.field_key] ?? '';
                     });
-
                     return row;
                 });
 
-                // 4. Add sheet
-                const ws = XLSX.utils.json_to_sheet(flattenedData);
+                // 4. Create worksheet
                 const sheetName = MODULES.find(m => m.id === mod)?.label || mod;
-                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                const worksheet = workbook.addWorksheet(sheetName);
+
+                // Columns from all keys
+                const allKeys = [...new Set(flattenedData.flatMap((r: Record<string, unknown>) => Object.keys(r)))];
+                worksheet.columns = allKeys.map(key => ({ header: key, key, width: 18 }));
+
+                // Add data rows
+                worksheet.addRows(flattenedData);
+
+                // Style header row
+                const headerRow = worksheet.getRow(1);
+                headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+                headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1C482C' } };
+                headerRow.alignment = { vertical: 'middle' };
+                headerRow.height = 20;
+
+                // Auto-fit column widths
+                worksheet.columns.forEach(col => {
+                    let maxLen = String(col.header ?? '').length;
+                    col.eachCell({ includeEmpty: false }, cell => {
+                        const len = cell.value ? String(cell.value).length : 0;
+                        if (len > maxLen) maxLen = len;
+                    });
+                    col.width = Math.min(Math.max(maxLen + 2, 10), 50);
+                });
+
+                // Freeze header row
+                worksheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+                totalSheets++;
             }
 
-            if (wb.SheetNames.length === 0) {
+            if (totalSheets === 0) {
                 toast.error('Nincs exportálható adat a kiválasztott modulokban.');
                 return;
             }
 
             // 5. Download
-            XLSX.writeFile(wb, `AlApp_Export_${new Date().toISOString().split('T')[0]}.${format}`);
+            const filename = `AlApp_Export_${new Date().toISOString().split('T')[0]}`;
+
+            if (format === 'xlsx') {
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${filename}.xlsx`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } else {
+                // CSV: each sheet as separate file, or combine all into one
+                for (const sheet of workbook.worksheets) {
+                    const buffer = await workbook.csv.writeBuffer({ sheetName: sheet.name });
+                    const blob = new Blob(['\uFEFF' + buffer], { type: 'text/csv;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${filename}_${sheet.name}.csv`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }
+            }
+
             onClose();
 
         } catch (error) {

@@ -38,8 +38,7 @@ interface NewIncident {
 
 export function useIncidents(entityId?: string) {
     const queryClient = useQueryClient();
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { mutate: _log } = useAuditLogger();
+    const { mutate: log } = useAuditLogger();
 
     const fetchIncidents = async () => {
         let query = supabase
@@ -105,18 +104,14 @@ export function useIncidents(entityId?: string) {
 
             return incident;
         },
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        onSuccess: (_data) => {
+        onSuccess: (data) => {
             queryClient.invalidateQueries({ queryKey: ['incidents'] });
-            // For now, logging simple creation. Could expand to log photo count.
-            /* 
             log({
-                action: 'create_incident',
+                action: 'create',
                 table_name: 'incidents',
-                record_id: data.id,
-                new_values: data
+                record_id: data?.id,
+                new_values: data as Record<string, unknown>,
             });
-            */
         },
     });
 

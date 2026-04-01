@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { WaterFacilityDocuments } from '../components/WaterFacilityDocuments';
 import { WaterFacilityImages } from '../components/WaterFacilityImages';
 import { usePermissions } from '@/core/permissions/usePermissions';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 
 type Tab = 'details' | 'documents' | 'images';
 
@@ -21,40 +22,66 @@ export function WaterFacilityDetailPage() {
     const { canManageUsers } = usePermissions();
     const [activeTab, setActiveTab] = useState<Tab>('details');
     const [isEditOpen, setIsEditOpen] = useState(false);
+    const [confirmState, setConfirmState] = useState<{
+        open: boolean;
+        variant: 'destructive' | 'warning';
+        title: string;
+        description?: string;
+        confirmLabel?: string;
+        onConfirm: () => void;
+    }>({ open: false, variant: 'destructive', title: '', onConfirm: () => {} });
+    const openConfirm = (cfg: Omit<typeof confirmState, 'open'>) =>
+        setConfirmState({ ...cfg, open: true });
+    const closeConfirm = () =>
+        setConfirmState(prev => ({ ...prev, open: false }));
 
-    const handleUpdate = async (data: WaterFacilityInput, file?: File) => {
+    const handleUpdate = (data: WaterFacilityInput, file?: File) => {
         if (!id) return;
-        try {
-            const updates = { ...data };
+        openConfirm({
+            variant: 'warning',
+            title: 'Adatok mentése',
+            description: `Biztosan mented a(z) „${facility?.name}" létesítmény adatait?`,
+            confirmLabel: 'Mentés',
+            onConfirm: async () => {
+                closeConfirm();
+                try {
+                    const updates = { ...data };
+                    if (file) {
+                        const driveFile = await googleStorage.uploadFile(
+                            file,
+                            data.name || 'water-facility',
+                            'water-facilities/permits'
+                        );
+                        updates.permit_file_path = driveFile.webViewLink;
+                    }
+                    await updateFacility({ id, updates });
+                    setIsEditOpen(false);
+                } catch (err) {
+                    console.error("Update failed", err);
+                    toast.error("Hiba történt a mentés során.");
+                }
+            },
+        });
+    };
 
-            // Upload file if new one selected
-            if (file) {
-                // Upload to Google Drive
-                // Folder: water-facilities/permits (or similar)
-                // We use facility ID in the folder structure or name to keep it organized?
-                // googleStorage.uploadFile takes (file, entityName, module)
-                // For entityName let's use facility name or ID.
-                // Let's use facility name to make it readable in Drive, but ID is safer for uniqueness.
-                // Given the previous pattern, let's use facility.name (which is in 'data.name').
-
-                const driveFile = await googleStorage.uploadFile(
-                    file,
-                    data.name || 'water-facility',
-                    'water-facilities/permits'
-                );
-
-                updates.permit_file_path = driveFile.webViewLink;
-            }
-
-            await updateFacility({
-                id,
-                updates: updates
-            });
-            setIsEditOpen(false);
-        } catch (err) {
-            console.error("Update failed", err);
-            toast.error("Hiba történt a mentés során.");
-        }
+    const handleDelete = () => {
+        if (!id) return;
+        openConfirm({
+            variant: 'destructive',
+            title: 'Létesítmény törlése',
+            description: `„${facility?.name}" törlése visszafordíthatatlan. Biztosan folytatod?`,
+            confirmLabel: 'Törlés',
+            onConfirm: async () => {
+                closeConfirm();
+                try {
+                    await deleteFacility(id);
+                    toast.success('Létesítmény törölve');
+                    navigate('/water-facilities');
+                } catch {
+                    toast.error('Hiba a törlés során');
+                }
+            },
+        });
     };
 
     if (isLoading) {
@@ -105,16 +132,7 @@ export function WaterFacilityDetailPage() {
                     </button>
                     {canManageUsers && (
                         <button
-                            onClick={async () => {
-                                if (!id || !window.confirm(`Biztosan törlöd a(z) „${facility.name}" létesítményt? Ez visszafordíthatatlan!`)) return;
-                                try {
-                                    await deleteFacility(id);
-                                    toast.success('Létesítmény törölve');
-                                    navigate('/water-facilities');
-                                } catch {
-                                    toast.error('Hiba a törlés során');
-                                }
-                            }}
+                            onClick={handleDelete}
                             className="flex items-center gap-2 px-4 py-2.5 bg-white border border-red-200 text-red-600 text-sm font-medium rounded-xl hover:bg-red-50 transition-colors shadow-sm"
                         >
                             <Trash2 className="w-4 h-4" />
@@ -234,6 +252,16 @@ export function WaterFacilityDetailPage() {
                 onCancel={() => setIsEditOpen(false)}
                 onSave={handleUpdate}
                 isLoading={false}
+            />
+
+            <ConfirmDialog
+                isOpen={confirmState.open}
+                variant={confirmState.variant}
+                title={confirmState.title}
+                description={confirmState.description}
+                confirmLabel={confirmState.confirmLabel}
+                onConfirm={confirmState.onConfirm}
+                onCancel={closeConfirm}
             />
         </div>
     );

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/core/auth/useAuth';
+import { useAuditLogger } from '@/modules/admin/hooks/useAuditLogsAdmin';
 
 export interface ReminderNotification {
     id: string;
@@ -41,6 +42,7 @@ export interface UpdateReminder {
 export function useReminders() {
     const { user } = useAuth();
     const queryClient = useQueryClient();
+    const { mutate: log } = useAuditLogger();
 
     const { data: reminders, isLoading, error } = useQuery({
         queryKey: ['reminders', user?.id],
@@ -90,8 +92,14 @@ export function useReminders() {
 
             return reminder;
         },
-        onSuccess: () => {
+        onSuccess: (result, variables) => {
             queryClient.invalidateQueries({ queryKey: ['reminders'] });
+            log({
+                action: 'create',
+                table_name: 'personal_reminders',
+                record_id: result?.id,
+                new_values: variables as Record<string, unknown>,
+            });
         },
     });
 
@@ -144,9 +152,16 @@ export function useReminders() {
                     .insert(notifs);
                 if (nErr) throw nErr;
             }
+            return input;
         },
-        onSuccess: () => {
+        onSuccess: (result) => {
             queryClient.invalidateQueries({ queryKey: ['reminders'] });
+            log({
+                action: 'update',
+                table_name: 'personal_reminders',
+                record_id: result?.id,
+                new_values: result as Record<string, unknown>,
+            });
         },
     });
 
@@ -159,8 +174,13 @@ export function useReminders() {
 
             if (error) throw error;
         },
-        onSuccess: () => {
+        onSuccess: (_, id) => {
             queryClient.invalidateQueries({ queryKey: ['reminders'] });
+            log({
+                action: 'delete',
+                table_name: 'personal_reminders',
+                record_id: id,
+            });
         },
     });
 
