@@ -380,7 +380,7 @@ function LeaveSummaryCard({ title, date, events, emptyText }: { title: string, d
 
     const onLeave = events.filter(event => {
         return areIntervalsOverlapping(
-            { start: event.start, end: event.end },
+            { start: event.start, end: endOfDay(event.end) },
             { start: targetStart, end: targetEnd }
         );
     });
